@@ -1,0 +1,2 @@
+Ce projet permet de synchroniser des opérations bancaires depuis et vers le Moneycenter de Boursorama. Un cache local est enregistré dans un fichier texte. Il est possible de modifier ce fichier pour faire des changements sur les opérations. Le fichier local peut alors être synchronisé vers le serveur de Boursorama.
+Il est aussi possible d'exporter toutes ou certaines opérations vers un fichier CSV.

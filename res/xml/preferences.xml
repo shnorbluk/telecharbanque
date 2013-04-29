@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+	xmlns:android="http://schemas.android.com/apk/res/android">
+	<PreferenceCategory android:title="Compte Boursorama" >
+		<EditTextPreference
+			android:key="login"
+			android:title="Numéro de compte"
+			android:summary="Entrez votre identifiant de connexion">
+		</EditTextPreference>
+		<EditTextPreference 
+			android:title="Mot de passe" 
+			android:key="password" 
+			android:summary="Entrez votre mot de passe" 
+			android:password="true">
+		</EditTextPreference>
+		<CheckBoxPreference 
+			android:title="Recharger toutes opérations" 
+			android:key="reloadOperations" 
+			android:summary="Recharger de force, quelle que soit la date des pages enregistrées" >
+		</CheckBoxPreference>
+	</PreferenceCategory>
+</PreferenceScreen>
+
