@@ -49,7 +49,7 @@ public class MoneycenterPersistence
   String f="/sdcard/Temp/mccsv.csv";
   Utils.writeToFile("", f, true);
 	 Utils.writeToFile(csv, f, false);
-  gui.display("Les opérations ont été enregistrées dans le fichier "+f+".");
+  gui.display("Les opérations ont été enregistrées dans le fichier "+f+".", true);
  }
 
  public static String csvEscape(String s) {
@@ -60,7 +60,7 @@ public class MoneycenterPersistence
  }
  
  void uploadOperations( String[] props) throws MalformedTextException, UnexpectedResponseException, IOException, ConnectionException, PatternNotFoundException {
-  gui.display("Analyse des opérations à faire");
+  gui.display("Analyse des opérations à faire", true);
   HashMap<String,List<String[]>> pendingOperations=new HashMap<String,List<String[]>> ();
   for (String modif:props){
    
@@ -76,7 +76,7 @@ public class MoneycenterPersistence
    String id=prop[0];
    if (!id.matches("[0-9]+")) {
     String error= "L'id '"+id+"' n'est pas au format correct.";
-    gui.display(error);
+    gui.display(error,true);
     throw new MalformedTextException (error);
    }
    String action=prop[1];
@@ -89,7 +89,7 @@ public class MoneycenterPersistence
    } else if("checked".equals(action)){
     boolean checked=Boolean.valueOf(value);
     doActions (pendingOperations);
-    gui.display("Pointage de l'opération "+id+":"+checked);
+    gui.display("Pointage de l'opération "+id+":"+checked, false);
     pointeOperation(id, checked);
    } else {
     Log.e(TAG, "Propriété "+action+" inconnue.");
@@ -97,7 +97,7 @@ public class MoneycenterPersistence
    }
   }
   doActions (pendingOperations);
-  gui.display("Modifications effectuées avec succès");
+  gui.display("Modifications effectuées avec succès", true);
  }
 
  void downloadToPersistence ( boolean saveAllMcPages, int firstPage,
@@ -118,10 +118,10 @@ public class MoneycenterPersistence
    task.setMoneycenterClient(client);
    task.setReloadPages(reloadPages);
    task.setCsvFileName(csvFile);
-   task.execute(-1);
+   task.execute("");
    task.get();
   }
-  gui.display("Opérations téléchargées");
+  gui.display("Opérations téléchargées", true);
  }
 
  public void uploadPersistenceFile() throws IOException, MalformedTextException, UnexpectedResponseException, ConnectionException, PatternNotFoundException {
@@ -138,9 +138,10 @@ public class MoneycenterPersistence
 
  private void doActions(Map<String,List<String[]>> operations) throws UnexpectedResponseException, IOException, ConnectionException, PatternNotFoundException {
  if (!operations.isEmpty()) {
-  gui.display("Opérations à faire:"+ Utils.toString(operations));
+  gui.display("Opérations à faire:"+ Utils.toString(operations), true); 
  }
- for (Map.Entry<String,List<String[]>> entry: operations.entrySet() ){
+ Map<String,List<String[]>> syncMap = Collections.synchronizedMap(operations);
+ for (Map.Entry<String,List<String[]>> entry: syncMap.entrySet() ){
   String id=entry.getKey();
   List<String[]> propList = entry.getValue();
   MoneyCenterOperation operation = client.getOperation(id, false);

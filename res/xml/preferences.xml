@@ -18,6 +18,11 @@
 			android:key="reloadOperations" 
 			android:summary="Recharger de force, quelle que soit la date des pages enregistrées" >
 		</CheckBoxPreference>
+		<CheckBoxPreference 
+			android:title="Mode simulation" 
+			android:key="simuMode" 
+			android:summary="Fonctionnement en mode hors-ligne. Aucun accès réseau ne sera réalisé." >
+		</CheckBoxPreference>
 	</PreferenceCategory>
 </PreferenceScreen>
 

@@ -34,8 +34,19 @@ public class HClient
 		}
 	}
 	
+	public void markAsObsolete(String url, String[] params) {
+		String file = generateFilenameForRequest(url,params);
+		logd("Deleting file ",file, "because it is obsolete");
+		boolean success = new File(file).delete();
+		if (success) {
+			logd("Fichier ",file, "supprimé avec succès");
+		} else {
+			Log.e(TAG, "Le fichier "+file+" n'a pas pu être supprimé.");
+		}
+	}
+	
 	@Deprecated
- public StringBuffer loadString(String url, String[] params, boolean fromNet, String patternToCheck,String fileName ) throws IOException, ConnectionException {
+ private StringBuffer loadString(String url, String[] params, boolean fromNet, String patternToCheck,String fileName ) throws IOException, ConnectionException {
   String method=params==null?"get":"post";
   String filePath= TEMP_DIR+"/"+method+"/"+fileName+".html";
   Log.i(TAG, "Looking for file "+ filePath);
@@ -78,15 +89,19 @@ public class HClient
   return loadString(url, params, fromNet, patternToCheck, fileName );
  }
 
+ private String generateFilenameForRequest(String url, String[] params) {
+	 String fileName= url;
+	 if (params!= null) {
+		 fileName+="%3F";
+		 for (int i=0; i<params.length; i+=2){
+			 fileName += params[i] + "=" + params[i+1] +"&";
+		 }
+	 }
+	 fileName = fileName .replace(":","") .replace("?","%3F").replace("|","%7C").replace("*","%2A").replace("\"", "%22");
+	 return fileName;
+ }
 	public BufferedReader getReaderFromUrl(String url, String[] params, boolean fromNet, String patternToCheck ) throws IOException, ConnectionException {
-		String fileName= url;
-		if (params!= null) {
-			fileName+="%3F";
-			for (int i=0; i<params.length; i+=2){
-				fileName += params[i] + "=" + params[i+1] +"&";
-			}
-		}
-		fileName = fileName .replace(":","") .replace("?","%3F").replace("|","%7C").replace("*","%2A").replace("\"", "%22");
+		String fileName=generateFilenameForRequest(url, params);
 		return getReaderFromUrl(url, params, fromNet, patternToCheck, fileName );
 	}
 	
@@ -114,16 +129,16 @@ public class HClient
 			if (scanner.findWithinHorizon(patternToCheck, 0) != null) {
 				return str;
 			} else {
-				gui.display ("Téléchargement de "+url+ " incomplet. Nouvelle tentative dans "+delay+" secondes.");
+				gui.display ("Téléchargement de "+url+ " incomplet. Nouvelle tentative dans "+delay+" secondes.", true); 
 				try {
 					Thread.sleep(delay);
 				} catch (InterruptedException ie) {
-					gui.display(ie.getMessage());
+					gui.display(ie.getMessage(), true); 
 				}
 			}
 		}
 		String error= "Échec de téléchargement de "+url;
-		gui.display(error);
+		gui.display(error, true);
 		throw new IOException(error);
 	}
 	
@@ -140,16 +155,16 @@ public class HClient
    if (str.indexOf(patternToCheck)>=0) {
     return str;
    } else {
-    gui.display ("Téléchargement de "+url+ " incomplet. Nouvelle tentative dans "+delay+" secondes.");
+    gui.display ("Téléchargement de "+url+ " incomplet. Nouvelle tentative dans "+delay+" secondes.", true);
     try {
 	  Thread.sleep(delay);
     } catch (InterruptedException ie) {
-     gui.display(ie.getMessage());
+     gui.display(ie.getMessage(), true);
     }
    }
   }
   String error= "Échec de téléchargement de "+url;
-  gui.display(error);
+  gui.display(error, true);
   throw new IOException(error);
  }
 
@@ -171,7 +186,6 @@ public class HClient
    logd("params=",params);
    logd("request=",request);
 	 logd("nameValuePairs", nameValuePairs);
-	 logd("request.getEntity()=",request.getEntity());
   return HRequest.execReq(client, request, gui);
  }
 	public HClient( HttpClient client, SessionManager sessionManager, UI gui) {

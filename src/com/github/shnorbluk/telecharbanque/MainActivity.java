@@ -34,7 +34,11 @@ public class MainActivity extends Activity
 		 button0 .setOnClickListener(new View.OnClickListener() {
          public void onClick(View v) {
 			 final DownloadMoneyCenterTask downTask = new DownloadMoneyCenterTask( httpClient );
-           downTask .execute("");
+			 try {
+              downTask .execute("");
+			 } catch (Exception e) {
+				 display(e.toString(), true);
+			 }
          }
         });
    
@@ -65,10 +69,10 @@ public class MainActivity extends Activity
  }
 
  public static void display(String... messages) {
-  if (messages[0] ==null || messages[0].contains("null")) {
+  if (messages[0] ==null || messages[0].equals("null")) {
       Log.d(TAG, "message est null"+Thread.currentThread().getStackTrace());
   }
-  display( messages[0], messages.length==1);
+  display( messages[0], Boolean.valueOf(messages[1]));
  }
  static void display(String message, boolean persistent) {
   if(persistent) {

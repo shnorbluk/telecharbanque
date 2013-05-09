@@ -34,18 +34,34 @@ public class MoneycenterSession implements SessionManager
   HashMap<String,String> categories = new HashMap< String,String >(); 
   String regex="\\{'type':'([^']+)','category':'([^']+)'\\}\">([^<]*)</a><b" ;
   Matcher matcher= Pattern.compile(regex).matcher(html);
-  while (matcher.find()){ 
+  StringBuilder sb = new StringBuilder();
+  while (matcher.find()){
+	  String categ=matcher.group(1)+"."+
+		  matcher.group(2);
+	  String categName=matcher.group(3);
+	//  sb.append("categories.").append(categ).append('=').
+	  //  append(categName).append('\n');
 //   Log.d( TAG ,matcher.group(1)+" "+
 //    matcher.group(2) +" "+ matcher.group(3) );
-   categories.put( matcher.group(1)+
-    matcher.group(2), matcher.group(3) );
+   categories.put( categ, categName);
   }
 //  Log.d( TAG , "Sous-Categories");
   matcher= Pattern.compile( 
    "\\{'type':'([^']+)','category':'([^']+)',subcategory:'([^']*)'\\}\">([^<]*)</a>" ).matcher(html);
   while (matcher.find()){ 
+   String categ=matcher.group(1)+'.'+matcher.group(2);
+   sb.append("#categories.").
+		  append(categ).
+		  append('.').
+		  append(matcher.group(3)).
+		  append('=').
+		  append(categories.get(categ)).
+		  append(',').
+		  append(matcher.group(4)).
+		  append('\n');
    Log.d( TAG ,  categories.get(matcher.group(1)+ matcher.group(2)) +", "+ matcher.group(4) +" "+ matcher.group(3) );
   }
+  Utils.writeToFile(sb.toString(), "/sdcard/Temp/telecharbanque/categories.txt", false);
  findNbOfPages(html);
 	}
 	

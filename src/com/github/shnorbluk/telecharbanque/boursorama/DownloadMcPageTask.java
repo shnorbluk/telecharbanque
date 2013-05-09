@@ -8,7 +8,7 @@ import com.github.shnorbluk.telecharbanque.util.*;
 import java.io.*;
 import java.util.*;
 
-public class DownloadMcPageTask extends AsyncTask<Integer, String, String[]>
+public class DownloadMcPageTask extends AsynchTask<String[]>
 {
 	private int numpage;
 	private int pageIndex;
@@ -38,12 +38,7 @@ public class DownloadMcPageTask extends AsyncTask<Integer, String, String[]>
 	
 	@Override
 	protected void onPreExecute () {
-		display("Page "+pageIndex+" sur "+nbOfPages+": Page "+numpage);
-	}
-	
-	public void display(String... messages) {
-		logd("display("+Utils.toString(messages)+") "+ Thread.currentThread().getStackTrace()[3]);
-		publishProgress( messages);
+		display("Page "+pageIndex+" sur "+nbOfPages+": Page "+numpage, false);
 	}
 	
 	private static void logd(Object o) {
@@ -58,7 +53,7 @@ public class DownloadMcPageTask extends AsyncTask<Integer, String, String[]>
 		List<MoneyCenterOperation> list = new ArrayList<MoneyCenterOperation>();
 		String[] opes=extract.split("<tr");
 		for (int partnum=1; partnum<opes.length; partnum++) {
-			display("Opération "+ partnum+" sur "+ (opes.length-1)+" de la page "+numpage,"false");
+			display("Opération "+ partnum+" sur "+ (opes.length-1)+" de la page "+numpage, false);
 			String extr=opes[partnum];
 			if ( extr .indexOf("class=\"createRule\"")>0) {
 				logd("Proposition de catégorie");
@@ -75,7 +70,7 @@ public class DownloadMcPageTask extends AsyncTask<Integer, String, String[]>
 		return list;
 	}
 	
-	protected String[] doInBackground(Integer... page) {
+	protected String[] doInBackground(String... pages) {
 		List<MoneyCenterOperation> operationList = new ArrayList<MoneyCenterOperation>(42);
 			int debut = -1,fin=-1;
 			StringBuffer html;
@@ -127,7 +122,7 @@ public class DownloadMcPageTask extends AsyncTask<Integer, String, String[]>
 	 {
 		 Utils.writeToFile(result[0], MoneycenterPersistence.PERSISTENCE_FILE, true);
 		 Utils.writeToFile(result[1], csvFileName, true);
-		 display("La page "+numpage+" a été téléchargée.");
+		 display("La page "+numpage+" a été téléchargée.", true);
 	 }
 	 catch (IOException e)
 	 {
@@ -136,7 +131,7 @@ public class DownloadMcPageTask extends AsyncTask<Integer, String, String[]>
  }
 
  private void displayError(Exception e) {
-	 Log.e(TAG, "Erreur dans la récupération de la page "+numpage,e);
+	 display( "Erreur dans la récupération de la page "+numpage+e, true );
  }
 
 }

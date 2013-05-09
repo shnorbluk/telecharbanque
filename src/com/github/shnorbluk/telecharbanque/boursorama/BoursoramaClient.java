@@ -42,7 +42,7 @@ public class BoursoramaClient implements SessionManager
   int[] keybPixels=new int[55*31];
   for (int yKeyb:new int[]{20,53,86,119}) {
    for(int xKeyb:new int[]{20,77,134}){
-    gui.display("Décodage du chiffre à la position "+ xKeyb+","+yKeyb);
+    gui.display("Décodage du chiffre à la position "+ xKeyb+","+yKeyb,false);
     Log.i(TAG, xKeyb+","+yKeyb);
     mBitmapKeyboard.getPixels(keybPixels, 0, 55, xKeyb, yKeyb,55,31);
     int minDiff=Integer.MAX_VALUE;
@@ -80,7 +80,7 @@ public class BoursoramaClient implements SessionManager
 	 logd("Connexion ", Thread.currentThread().getStackTrace());
    boolean online=true;
    String password=Configuration.getBoursoramaPassword();
-   gui.display("Connexion à Boursorama  en cours");
+   gui.display("Connexion à Boursorama  en cours",true);
    //if (simu) return;
 		  StringBuffer connectionPage=hclient.loadString("https://www.boursorama.com/connexion.phtml?", null, online, "");
 		  String connectionPageStr=connectionPage.toString();
@@ -118,7 +118,7 @@ public class BoursoramaClient implements SessionManager
 	      if (page.indexOf("Identifiant ou mot de passe incorrect")>0) {
 		   throw new Exception("Identifiant ou mot de passe incorrect");
       	 }
-		  gui.display("Connecté");
+		  gui.display("Connecté", true);
 	  
  }
  

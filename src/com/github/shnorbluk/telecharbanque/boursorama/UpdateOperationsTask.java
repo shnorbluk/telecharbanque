@@ -1,14 +1,14 @@
-package com.github.shnorbluk.telecharbanque;
+package com.github.shnorbluk.telecharbanque.boursorama;
 
-import android.os.*;
 import android.util.*;
-import com.github.shnorbluk.telecharbanque.boursorama.*;
+import com.github.shnorbluk.telecharbanque.*;
 import com.github.shnorbluk.telecharbanque.util.*;
 import org.apache.http.client.*;
 
-public class UpdateOperationsTask extends AsyncTask<String, String, String> implements UI 
+public class UpdateOperationsTask extends AsynchTask<String>
 {
  private MoneycenterPersistence persistence;
+	protected static String TAG="UpdateOperationsTask";
 
  public UpdateOperationsTask( HttpClient httpClient) {
   this. persistence = new MoneycenterPersistence (httpClient, this);
@@ -17,28 +17,10 @@ public class UpdateOperationsTask extends AsyncTask<String, String, String> impl
   }
  }
 
- public void display(String... messages) {
-   Utils.logd(TAG, "display(",messages, ") ");
-   publishProgress( messages);
-  }
-
  void setSimulationMode () {
   persistence. setSimulationMode();
  }
 
- private static void logd (Object... objects) {
-  String message="";
-  for (Object o: objects) {
-   message += Utils.toString(o);
-  }
-  Log.d(TAG, message + " (" + Thread.currentThread().getStackTrace()[3]+")");
- }
-  
-  public void onProgressUpdate(String... messages) {
-    MainActivity.display(messages);
-  }
-   
-  private static String TAG= "UpdateOperationsTask";
  /** The system calls this to perform work in a worker thread and
    * delivers it the parameters given to AsyncTask.execute()
    */
@@ -46,7 +28,7 @@ public class UpdateOperationsTask extends AsyncTask<String, String, String> impl
   try {
    persistence.uploadPersistenceFile ();
   } catch (Exception e) {
-   publishProgress(e.getMessage());
+   display(e.getMessage(), true);
    Log.e(TAG, "Erreur", e);
   }
   return null;

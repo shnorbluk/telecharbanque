@@ -9,7 +9,6 @@ public class Configuration
 	private static final boolean reloadMcPages = true;
 	private static final boolean reloadOperationPages=true;
 	private static final boolean saveAllMcPages =false;
-	private static final boolean simuMode=false;
 	private static SharedPreferences pref;
 
 	public static String getBoursoramaLogin() {
@@ -37,7 +36,7 @@ public class Configuration
  }
  
  public static boolean isSimuMode() {
-	 return simuMode;
+	 return pref.getBoolean("simuMode", false);
  }
  
  public static void setPreferences(SharedPreferences pref) {

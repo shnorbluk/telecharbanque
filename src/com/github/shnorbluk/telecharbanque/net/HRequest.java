@@ -33,7 +33,7 @@ public class HRequest
    } catch (Exception e) {
     Log.e(TAG, " exception autre connexion", e);
     if(gui!=null) {
-     gui.display(e.getMessage());
+     gui.display(e.getMessage(), true);
     }
     e.printStackTrace();
    }
@@ -55,6 +55,7 @@ public class HRequest
    return sb; 
   } 
  public void save(String filename) throws FileNotFoundException, IOException {
+   new File(filename).getParentFile().mkdirs();
    FileOutputStream fos=new FileOutputStream(filename);  
    byte[] cars = new byte[255];
    int nb;

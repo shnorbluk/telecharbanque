@@ -8,9 +8,9 @@ import java.util.*;
 import org.apache.http.client.*;
 
 public class DownloadMoneyCenterTask 
-  extends AsyncTask<String, String, String> implements UI 
+  extends AsynchTask<String>
 {
- private static String TAG="DownloadMoneyCenterTask";
+ protected static String TAG="DownloadMoneyCenterTask";
  private MoneycenterPersistence persistence;
  static final String today=new SimpleDateFormat("d-M-yyyy").format(new Date());
  
@@ -19,15 +19,6 @@ public class DownloadMoneyCenterTask
 //	 persistence.setSimulationMode();
  }
 
- public void display(String... messages) {
-   Log.d(TAG,"display("+Utils.toString(messages)+") "+ Thread.currentThread().getStackTrace()[3]);
-   publishProgress( messages);
-  }
-
-  public void onProgressUpdate(String... messages) {
-    MainActivity.display(messages);
-  }
-   
    /** The system calls this to perform work in a worker thread and
    * delivers it the parameters given to AsyncTask.execute()
    */
