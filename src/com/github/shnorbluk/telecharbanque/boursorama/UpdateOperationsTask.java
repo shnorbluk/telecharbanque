@@ -10,8 +10,8 @@ public class UpdateOperationsTask extends AsynchTask<String>
  private MoneycenterPersistence persistence;
 	protected static String TAG="UpdateOperationsTask";
 
- public UpdateOperationsTask( HttpClient httpClient) {
-  this. persistence = new MoneycenterPersistence (httpClient, this);
+ public UpdateOperationsTask( HttpClient httpClient, SQLiteMoneycenter db) {
+  this. persistence = new MoneycenterPersistence (httpClient, this, db);
   if (Configuration.isSimuMode()) {
    persistence.setSimulationMode();
   }

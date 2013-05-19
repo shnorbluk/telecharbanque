@@ -1,57 +1,63 @@
 package com.github.shnorbluk.telecharbanque.boursorama;
 
 public enum MoneycenterProperty {
-	LIBELLE("libelle") {
+	LIBELLE("libelle", "TEXT NOT NULL") {
 		public String getValue ( MoneyCenterOperation ope) {
 			return ope.getLibelle();
 		}
  },
- MEMO("memo") {
+ MEMO("memo", "TEXT") {
 	 public String getValue ( MoneyCenterOperation ope) {
 		 return ope.getMemo();
 	 }
  },
- DATE("date") {
+ DATE("date", "TEXT NOT NULL") {
 	 public String getValue ( MoneyCenterOperation ope) {
 		 return ope.getDate();
 	 }
  },
- AMOUNT("amount") {
+ AMOUNT("amount", "REAL NOT NULL") {
 	 public String getValue ( MoneyCenterOperation ope) {
 		 return Float.toString(ope.getAmount());
 	 }
  },
- CATEGORY("category"){
+ CATEGORY("category", "TEXT"){
 	 public String getValue ( MoneyCenterOperation ope) {
 		 return ope.getCategory();
 	 }
  },
- CATEGLABEL("categoryLabel") {
+ CATEGLABEL("categoryLabel", "TEXT") {
 	 public String getValue (MoneyCenterOperation ope) {
 		 return ope.getCategoryLabel();
 	 }
  },
- ACCOUNT("account"){
+ ACCOUNT("account", "TEXT NOT NULL"){
 	 public String getValue ( MoneyCenterOperation ope) {
 		 return ope.getAccount();
 	 }
  },
- CHECKED("checked"){
+ CHECKED("checked", "BOOLEAN NOT NULL"){
 	 public String getValue ( MoneyCenterOperation ope) {
 		 return Boolean.toString(ope.isChecked());
 	 }
  },
- PARENT("parent"){
+ PARENT("parent", "TEXT"){
 	 public String getValue ( MoneyCenterOperation ope) {
 		 return ope.getParent();
+	 
 	 }
  };
  private String name;
- MoneycenterProperty (String name) {
+ private String sqlType;
+ MoneycenterProperty (String name, String sqlType) {
   this.name= name;
+  this.sqlType=sqlType;
  }
  public String getName () {
   return name;
+ }
+ public String getSqlType() {
+	 return sqlType;
  }
  public abstract String getValue ( MoneyCenterOperation ope) ;
 }

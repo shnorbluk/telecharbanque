@@ -13,10 +13,10 @@ public class DownloadMoneyCenterTask
  protected static String TAG="DownloadMoneyCenterTask";
  private MoneycenterPersistence persistence;
  static final String today=new SimpleDateFormat("d-M-yyyy").format(new Date());
+	
  
- public DownloadMoneyCenterTask ( HttpClient httpClient) {
-	 this. persistence = new MoneycenterPersistence(httpClient, this);
-//	 persistence.setSimulationMode();
+ public DownloadMoneyCenterTask ( HttpClient httpClient, SQLiteMoneycenter db) {
+	 this. persistence = new MoneycenterPersistence(httpClient, this, db);
  }
 
    /** The system calls this to perform work in a worker thread and

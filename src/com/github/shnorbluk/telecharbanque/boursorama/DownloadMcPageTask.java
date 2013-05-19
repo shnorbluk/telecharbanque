@@ -17,6 +17,7 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 	private boolean reloadPages;
 	private static final String TAG="DownloadMcPageTask";
 	private static String csvFileName;
+	private final SQLiteMoneycenter db;
 
 	public void setReloadPages (boolean reloadPages) {
 	 this.reloadPages=reloadPages;
@@ -29,11 +30,12 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 	public void setCsvFileName(String csvFile) {
 		this.csvFileName=csvFile;
 	}
-	public DownloadMcPageTask(int numpage, int pageIndex, int nbOfPages)
+	public DownloadMcPageTask(int numpage, int pageIndex, int nbOfPages, SQLiteMoneycenter db)
 	{
 		this.numpage = numpage;
 		this.pageIndex = pageIndex;
 		this.nbOfPages = nbOfPages;
+		this.db = db;
 	}
 	
 	@Override
@@ -66,6 +68,7 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 			op.setAccount(ope.getAccount());
 			op.setCategoryLabel(ope.getCategoryLabel());
 			list.add( op);
+			db.setOperation(op);
 		}
 		return list;
 	}

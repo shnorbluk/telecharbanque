@@ -18,6 +18,7 @@ public class MoneycenterClient
  private final UI gui;
 	private static final String URL_EDIT_OPERATION = "https://www.boursorama.com/ajax/patrimoine/moneycenter/monbudget/operation_edit.phtml";
 	private int nbOfPages;
+	
 
  public MoneycenterClient(HttpClient httpClient, UI gui ) {
   this.gui=gui;
@@ -74,7 +75,6 @@ public class MoneycenterClient
   return operationList;
  }
 
- @Deprecated
  private List<MoneyCenterOperation> parseListPage(String extract) throws PatternNotFoundException, IOException, ConnectionException {
   List<MoneyCenterOperation> list = new ArrayList<MoneyCenterOperation>();
   String[] opes=extract.split("<tr");
@@ -134,13 +134,6 @@ public class MoneycenterClient
 			"id",  ID_OPERATION};
 		return hclient.getReaderFromUrl( URL_EDIT_OPERATION ,params, fromNet, "" );
 	}
-	
-	@Override
- private StringBuffer getOperationPage(String ID_OPERATION, boolean fromNet ) throws IOException , ConnectionException{
-  String[] params=new String[]{
-"id",  ID_OPERATION};
-  return hclient.loadString( URL_EDIT_OPERATION ,params, fromNet, "" );
- }
  
  private void markOperationPageAsObsolete(String id) {
 	 String[] params=new String[]{

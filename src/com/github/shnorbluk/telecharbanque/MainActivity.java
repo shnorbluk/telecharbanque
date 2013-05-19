@@ -19,6 +19,7 @@ public class MainActivity extends Activity
  private static AssetManager assetMgr;
  private static String text="";
 	private final DefaultHttpClient httpClient = new DefaultHttpClient();
+	private final SQLiteMoneycenter db = new SQLiteMoneycenter(this);
 
     /** Called when the activity is first created. */
     @Override
@@ -33,7 +34,7 @@ public class MainActivity extends Activity
        Button button0 = (Button) findViewById(R.id.Button01);
 		 button0 .setOnClickListener(new View.OnClickListener() {
          public void onClick(View v) {
-			 final DownloadMoneyCenterTask downTask = new DownloadMoneyCenterTask( httpClient );
+			 final DownloadMoneyCenterTask downTask = new DownloadMoneyCenterTask( httpClient, db );
 			 try {
               downTask .execute("");
 			 } catch (Exception e) {
@@ -45,7 +46,7 @@ public class MainActivity extends Activity
        Button buttonUp = (Button) findViewById(R.id.ButtonUp);
 		 buttonUp .setOnClickListener(new View.OnClickListener() {
          public void onClick(View v) {
-			 final UpdateOperationsTask uploadTask = new UpdateOperationsTask( httpClient );
+			 final UpdateOperationsTask uploadTask = new UpdateOperationsTask( httpClient, db );
           uploadTask .execute("");
          }
         });

@@ -17,11 +17,13 @@ public class MoneycenterPersistence
  private final MoneycenterClient client;
  private final UI gui;
  private final HClient hclient;
+	private final SQLiteMoneycenter db;
 
- public MoneycenterPersistence( HttpClient httpClient, UI gui) {
+	public MoneycenterPersistence( HttpClient httpClient, UI gui, final SQLiteMoneycenter db) {
   this. client= new MoneycenterClient(httpClient, gui);
   hclient=client.getHClient();
   this.gui=gui;
+  this.db=db;
  }
 
  public void setSimulationMode() {
@@ -114,7 +116,7 @@ public class MoneycenterPersistence
   Utils.writeToFile("",PERSISTENCE_FILE,false);
   Utils.writeToFile("",csvFile,false);
   for (int numpage= firstPage; numpage<=lastPage; numpage++ ) {
-   DownloadMcPageTask task = new DownloadMcPageTask(numpage, pageIndex++, nbOfPages);
+   DownloadMcPageTask task = new DownloadMcPageTask(numpage, pageIndex++, nbOfPages, db);
    task.setMoneycenterClient(client);
    task.setReloadPages(reloadPages);
    task.setCsvFileName(csvFile);
