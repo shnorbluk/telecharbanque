@@ -68,12 +68,15 @@ public class HClient
 		File file=new File( filePath );
 		boolean fileDoesNotExist = ! file.exists();
 		boolean net= fromNet || fileDoesNotExist;
-		if ( net ){
-			connectIfNeeded();
-			return getReaderFromUrlOnline(url, params, filePath, patternToCheck );
-		} else {
-			return getReaderFromFile(url, params, filePath );
+		if ( !net ){
+			BufferedReader reader= getReaderFromFile(url, params, filePath );
+			if (new Scanner(reader).findWithinHorizon(patternToCheck,0) != null ) {
+				reader.reset();
+				return reader;
+			}
 		}
+		connectIfNeeded();
+		return getReaderFromUrlOnline(url, params, filePath, patternToCheck );
 	}
 	
 	@Deprecated

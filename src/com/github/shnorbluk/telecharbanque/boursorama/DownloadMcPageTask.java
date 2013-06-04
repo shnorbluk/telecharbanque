@@ -43,7 +43,7 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 		display("Page "+pageIndex+" sur "+nbOfPages+": Page "+numpage, false);
 	}
 	
-	private static void logd(Object o) {
+	private static void logd(Object... o) {
 		Utils.logd(TAG,o);
 	}
 
@@ -62,12 +62,14 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 				continue;
 			}
 			MoneyCenterOperation ope = MoneycenterParser. getOperationFromListExtract( extr);
+			logd("Récupération de l'opération ", ope.getId());
 			MoneyCenterOperation op=client.getOperation(ope.getId(), Configuration.isReloadOperationPages());
 			op.setChecked( ope.isChecked());
 			op.setParent( ope.getParent());
 			op.setAccount(ope.getAccount());
 			op.setCategoryLabel(ope.getCategoryLabel());
 			list.add( op);
+			logd("Enregistrement de l'opération dans la base de données");
 			db.setOperation(op);
 		}
 		return list;
@@ -79,6 +81,7 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 			StringBuffer html;
 		try
 		{
+			db.open();
 			html = client.getHClient().loadString(
 				"https://www.boursorama.com/patrimoine/moneycenter/monbudget/operations.phtml?page=" + numpage, null, reloadPages, "</tbody>");
 			debut=html.indexOf( "liste-operations-page")+24;
@@ -134,7 +137,8 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
  }
 
  private void displayError(Exception e) {
-	 display( "Erreur dans la récupération de la page "+numpage+e, true );
+	 display( "Erreur dans la récupération de la page "+numpage+":"+e, true );
+	 Log.e(TAG, "Erreur dans la récupération de la page "+numpage,e);
  }
 
 }

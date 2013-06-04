@@ -32,27 +32,28 @@ public class BoursoramaClient implements SessionManager
   simu = true;
  }
 
-	static void logd (String TAG, Object o) {
-		Log.d(TAG, Utils.toString(o) + " (" + Thread.currentThread().getStackTrace()[3]+")");
-	}
-	
+	private static final int DIGIT_WIDTH=100;
+	private static final int DIGIT_HEIGHT=60;
+	private static final int FIRST_SIGNIFICANT_ROW=0;
+	private static final int LAST_SIGNIFICANT_ROW=59;
  private String[] decodePad(String filepath) throws IOException{
   Bitmap mBitmapKeyboard = BitmapFactory.decodeFile(filepath);
   String[] map=new String[10];
-  int[] keybPixels=new int[55*31];
-  for (int yKeyb:new int[]{20,53,86,119}) {
-   for(int xKeyb:new int[]{20,77,134}){
+	 int[] keybPixels=new int[DIGIT_WIDTH*DIGIT_HEIGHT];
+	 for (int yKeyb=0; yKeyb<=3*DIGIT_HEIGHT; yKeyb += DIGIT_HEIGHT) {
+   for(int xKeyb=0; xKeyb<=2*DIGIT_WIDTH; xKeyb+=DIGIT_WIDTH){
     gui.display("Décodage du chiffre à la position "+ xKeyb+","+yKeyb,false);
     Log.i(TAG, xKeyb+","+yKeyb);
-    mBitmapKeyboard.getPixels(keybPixels, 0, 55, xKeyb, yKeyb,55,31);
+    mBitmapKeyboard.getPixels(keybPixels, 0, DIGIT_WIDTH, xKeyb, yKeyb,DIGIT_WIDTH, DIGIT_HEIGHT);
     int minDiff=Integer.MAX_VALUE;
     int mostAccurate=-1;
+	String diffs="";
     for (int digit=0; digit<=10; digit++) {
      Bitmap digitBm= BitmapFactory.decodeStream(MainActivity.loadResource( digit+".png"));
-     int[] digitPixels=new int[55*31];
-     digitBm.getPixels(digitPixels, 0, 55, 0,0,55,31);
+     int[] digitPixels=new int[DIGIT_WIDTH*DIGIT_HEIGHT];
+		digitBm.getPixels(digitPixels, 0, DIGIT_WIDTH, 0,0,DIGIT_WIDTH, DIGIT_HEIGHT);
      int diff=0;
-     for (int pixIndex=9*55+40;pixIndex<23*55+49; pixIndex++) {
+     for (int pixIndex=FIRST_SIGNIFICANT_ROW*DIGIT_WIDTH;pixIndex<LAST_SIGNIFICANT_ROW*DIGIT_WIDTH; pixIndex++) {
       int pix = keybPixels[ pixIndex] ;
       int digitPix = digitPixels[ pixIndex ];
       int rpix=Color.red(pix);
@@ -61,13 +62,13 @@ public class BoursoramaClient implements SessionManager
        diff++;
       }
      }
-     Log.i (TAG, "digit="+digit+" diff="+diff);
+	 diffs+=diff+" ";
      if(diff<minDiff) {
       minDiff =diff;
       mostAccurate=digit;
      }
     }
-    Log.i (TAG, xKeyb+","+yKeyb+":"+mostAccurate);
+    Log.i (TAG, xKeyb+","+yKeyb+":"+mostAccurate+" "+diffs);
     if(mostAccurate!=10){
      map[mostAccurate ]=xKeyb+","+yKeyb;
     }
@@ -91,15 +92,21 @@ public class BoursoramaClient implements SessionManager
 			  hclient.httpget( imgUrl).save( filePath );
 		  }
 		  String[] coordMap= decodePad (filePath);
+		  logd("coordMap=",coordMap);
 		  String[] parts = connectionPageStr.split ("<area shape");
 		  HashMap<String,String> codeMap=new HashMap<String,String>(12);
 		  for(int i=1; i<parts.length; i++){
-			  int end=parts[i].indexOf(",",21);
-			  String coord=parts[i].substring(16,end);
+			  int start=parts[i].indexOf("\"",40)+1;
+			  int end=parts[i].indexOf(",", start);
+			  end=parts[i].indexOf(",", end+1);
+			  String coord=parts[i].substring(start,end);
+			  logd("coord=",coord);
 			  end= parts[i]. indexOf("+=", 87);
 			  String code=parts[i]. substring(end+4, end+8);
+			  logd("code=",code);
 			  codeMap.put(coord,code);
 		  }
+		  logd("codeMap=",codeMap);
 		  String encoded="";
 		  for(char digitChar:password.toCharArray()){
 			  int digit=Character.digit( digitChar,10);
@@ -122,7 +129,7 @@ public class BoursoramaClient implements SessionManager
 	  
  }
  
- private static void logd(Object o) {
+ private static void logd(Object... o) {
 	 Utils.logd(TAG, o);
  }
 

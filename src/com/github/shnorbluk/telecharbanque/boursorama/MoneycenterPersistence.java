@@ -128,7 +128,9 @@ public class MoneycenterPersistence
 
  public void uploadPersistenceFile() throws IOException, MalformedTextException, UnexpectedResponseException, ConnectionException, PatternNotFoundException {
   StringBuffer modifs=Utils.readFile ( PERSISTENCE_FILE, "iso-8859-1");
-  if (! (""+modifs.charAt(0)+modifs.charAt(modifs.length()-1)).matches("[0-9#][\\s\\w]") ) {
+	char firstChar=modifs.charAt(0);
+	char lastChar=modifs.charAt(modifs.length()-1);
+  if (! (""+firstChar+lastChar).matches("[0-9#][\\s\\w]") ) {
 	  String error="Le fichier d'entrée "+PERSISTENCE_FILE+" est mal formé. Il doit être en ISO-8859-1, commencer par un chiffre et finir par un caractère.\n";
 	  error += "Le premier caractère est '"+modifs.charAt(0)+"' et devrait être un chiffre ou #.\n";
 	  error += "Le dernier caractère est '"+modifs.charAt(modifs.length()-1) +"' et devrait être \\s ou \\w.\n";

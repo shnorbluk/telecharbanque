@@ -2,6 +2,7 @@ package com.github.shnorbluk.telecharbanque.net;
 
 import android.util.*;
 import com.github.shnorbluk.telecharbanque.*;
+import com.github.shnorbluk.telecharbanque.util.*;
 import java.io.*;
 import org.apache.http.*;
 import org.apache.http.client.*;
@@ -17,6 +18,9 @@ public class HRequest
   this.is=is;
  }
 
+ private static void logd(Object... o) {
+	 Utils.logd(TAG, o);
+ }
  public static HRequest execReq(HttpClient client, HttpUriRequest req, UI gui) throws IOException, IllegalStateException {
   HttpResponse response=null;
   Log.d(TAG," execReq("+req);
@@ -38,6 +42,8 @@ public class HRequest
     e.printStackTrace();
    }
   }
+  if (response == null) logd("response null");
+  if (response.getEntity() == null) logd("entity null");
   InputStream is= response.getEntity().getContent() ; 
   return new HRequest(is);
  }

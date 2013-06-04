@@ -193,10 +193,10 @@ public String getSubCategory (){
 
  private static String findGroupBetween (String str, String regexBegin, String end, String regexGroup) throws PatternNotFoundException {
    String excerpt=getExtract(str, regexBegin, end);
-   logd("excerpt="+excerpt);
-   logd("regexgroup="+regexGroup);
+  // logd("excerpt="+excerpt);
+   //logd("regexgroup="+regexGroup);
    String result= Utils.findGroupAfterPattern(excerpt, "", regexGroup);
-   logd("result="+result);
+   //logd("result="+result);
    return result;
  }
 
@@ -211,7 +211,7 @@ public String getSubCategory (){
 
  public MoneyCenterOperation (BufferedReader html, String id) throws PatternNotFoundException, IOException { 
   this.id=id;
-		 String extract= Utils.getExtract(html, "id=\"form_edit_operation\">", "</select></form>");
+	 String extract= Utils.getExtract(html, "id=\"form_edit_operation\">", "new_groupings\\[\\]");
 	 libelle = Utils.findGroupAfterPattern(extract, "editOperation\\[libelle\\]", "value=\"([^\"]*)");
 	 libelle = android.text.Html.fromHtml( libelle ).toString();
   account = Utils. findGroupAfterPattern(extract,"editOperation\\[id_account\\]", "value=\"([^\"]*)");

@@ -35,7 +35,7 @@ public class MoneycenterParser {
   }
   return ope;
  }
- static void logd(String msg) {
+ static void logd(String... msg) {
 	 Utils.logd(TAG, msg);
  }
 }

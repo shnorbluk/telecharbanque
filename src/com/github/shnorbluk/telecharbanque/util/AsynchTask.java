@@ -13,9 +13,12 @@ public abstract class AsynchTask<Return> extends AsyncTask<String, String, Retur
 		publishProgress( message, Boolean.toString(persistent));
 
 	}
-	
+
 	@Override
 	public void onProgressUpdate(String... messages) {
+		if (messages.length==0) {
+			Utils.logd("AsynchTask", "Erreur 1 seul paramètre, message=",messages[0]);
+		}
 		MainActivity.display(messages);
 	}
 }

@@ -7,7 +7,6 @@ public class Configuration
  private static final int firstPage = 1;
  private static final int lastPage = 1;
 	private static final boolean reloadMcPages = true;
-	private static final boolean reloadOperationPages=true;
 	private static final boolean saveAllMcPages =false;
 	private static SharedPreferences pref;
 
@@ -28,11 +27,11 @@ public class Configuration
 		return firstPage;
 	}
  public static int getLastPage() {
-	 return lastPage;
+	 return pref.getInt("lastMcPage", 1);
  }
  
  public static boolean isSaveAllMcPages() {
-	 return saveAllMcPages;
+	 return pref.getBoolean("saveAllMcPages", false);
  }
  
  public static boolean isSimuMode() {

@@ -10,14 +10,19 @@ public class SQLiteMoneycenter extends SQLiteOpenHelper
 	private static final String TABLE_OPERATIONS="operations";
 	private static final String COL_UPTODATE ="uptodate";
 	private static final String TABLE_CATEGORIES="categories";
+	private static final String COL_ID = "id";
 	private static final String COL_CATEGORY = "category";
+	private static final String COL_SUBCATEGORY = "subcategory";
+	private static final String COL_CATEGORY_LABEL="categoryLabel";
+	private static final String COL_DEBIT="debit";
+	
 	private SQLiteDatabase bdd=null;
 	public SQLiteMoneycenter(Context context) {
-		super(context, "moneycenter.db", null, 1);
+		super(context, "moneycenter.db", null, 3);
 		
 	}
 	
-	private void open() {
+	public void open() {
 		if (bdd == null) {
 			bdd= getWritableDatabase();
 		}
@@ -31,7 +36,7 @@ public class SQLiteMoneycenter extends SQLiteOpenHelper
 		}
 		values.put(COL_UPTODATE, true);
 		logd("Insertion des valeurs:",values);
-		bdd.insert(TABLE_OPERATIONS, null, values);
+		bdd.replace(TABLE_OPERATIONS, null, values);
 	}
 	@Override
 	public void onCreate(SQLiteDatabase db)
@@ -52,7 +57,14 @@ public class SQLiteMoneycenter extends SQLiteOpenHelper
 		logd("Exécution de la requête "+QUERY);
 		  db.execSQL(QUERY);
 		  db.execSQL("CREATE TABLE "+TABLE_CATEGORIES+
-		    " ("+COL_CATEGORY+" TEXT NOT NULL);");
+		    " ("+COL_CATEGORY+" TEXT NOT NULL, "+
+			COL_SUBCATEGORY+" TEXT, "+
+			COL_CATEGORY_LABEL+" TEXT NOT NULL, "+
+			COL_ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
+			COL_DEBIT+" BOOLEAN);");
+		db.execSQL("CREATE TABLE account"+
+		  "( account STRING PRIMARY KEY AUTOINCREMENT"+
+		  "solde REAL NOT NULL);");
 	}
 	
 	private void logd(Object... o) {
@@ -62,7 +74,8 @@ public class SQLiteMoneycenter extends SQLiteOpenHelper
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int p2, int p3)
 	{
-		 final String QUERY = "DROP TABLE operations;";
+		 db.execSQL("DROP TABLE "+TABLE_OPERATIONS+";");
+		 final String QUERY = "DROP TABLE "+TABLE_CATEGORIES+";";
 		 db.execSQL(QUERY);
 		 onCreate(db);
 	}

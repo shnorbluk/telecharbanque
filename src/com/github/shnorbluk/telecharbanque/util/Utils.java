@@ -53,8 +53,6 @@ public class Utils
 	public static String getExtract(BufferedReader complete, String begin, String end) throws PatternNotFoundException, IOException {
 		complete.reset();
 		Scanner scanner = new Scanner(complete);
-//		scanner.findWithinHorizon(begin,0);
-		
         scanner.findWithinHorizon(begin,0);
 		String regex="(?s).*"+end;
 		String extract = scanner.findWithinHorizon(regex,0);

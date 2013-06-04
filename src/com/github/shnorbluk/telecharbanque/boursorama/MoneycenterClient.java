@@ -48,7 +48,7 @@ public class MoneycenterClient
  private void logd(Object... o) {
 	 Utils.logd(TAG,o);
  }
- List<MoneyCenterOperation> downloadMoneycenterOperations(
+ private List<MoneyCenterOperation> downloadMoneycenterOperations(
 	 boolean saveAllMoneyCenterPages, int firstPage,
    int lastPage, boolean reloadPages,
    boolean saveChecked) throws IOException, PatternNotFoundException, ConnectionException {
@@ -86,6 +86,7 @@ public class MoneycenterClient
     continue;
    }
    MoneyCenterOperation ope = MoneycenterParser. getOperationFromListExtract( extr);
+   logd("Récupération de l'opération ", ope.getId());
    MoneyCenterOperation op=getOperation(ope.getId(), false);
    op.setChecked( ope.isChecked());
    op.setParent( ope.getParent());
@@ -132,7 +133,7 @@ public class MoneycenterClient
 	private BufferedReader getOperationPageAsReader(String ID_OPERATION, boolean fromNet ) throws IOException , ConnectionException{
 		String[] params=new String[]{
 			"id",  ID_OPERATION};
-		return hclient.getReaderFromUrl( URL_EDIT_OPERATION ,params, fromNet, "" );
+		return hclient.getReaderFromUrl( URL_EDIT_OPERATION ,params, fromNet, "new_groupings\\[\\]" );
 	}
  
  private void markOperationPageAsObsolete(String id) {

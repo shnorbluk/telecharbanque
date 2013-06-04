@@ -13,6 +13,17 @@
 			android:summary="Entrez votre mot de passe" 
 			android:password="true">
 		</EditTextPreference>
+		<CheckBoxPreference
+			android:title="Télécharger toutes les pages" 
+			android:key="saveAllMcPages" 
+			android:summary="Récupérer toutes les pages de la liste des opérations" 
+			android:inputType="number">
+		</CheckBoxPreference>
+		<EditTextPreference
+			android:title="Nombre de pages" 
+			android:key="lastMcPage" 
+			android:summary="Nombre de pages de la liste d'opérations à télécharger" >
+		</EditTextPreference>
 		<CheckBoxPreference 
 			android:title="Recharger toutes opérations" 
 			android:key="reloadOperations" 
