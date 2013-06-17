@@ -22,6 +22,7 @@
 		<EditTextPreference
 			android:title="Nombre de pages" 
 			android:key="lastMcPage" 
+			android:inputType="number"
 			android:summary="Nombre de pages de la liste d'opérations à télécharger" >
 		</EditTextPreference>
 		<CheckBoxPreference 

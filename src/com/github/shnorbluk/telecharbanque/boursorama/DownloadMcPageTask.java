@@ -46,13 +46,9 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 	private static void logd(Object... o) {
 		Utils.logd(TAG,o);
 	}
-
-	public void onProgressUpdate(String... messages) {
-		MainActivity.display(messages);
-	}
 	
-	private List<MoneyCenterOperation> parseListPage(String extract) throws PatternNotFoundException, IOException, ConnectionException {
-		List<MoneyCenterOperation> list = new ArrayList<MoneyCenterOperation>();
+	private List<MoneycenterOperation> parseListPage(String extract) throws PatternNotFoundException, IOException, ConnectionException {
+		List<MoneycenterOperation> list = new ArrayList<MoneycenterOperation>();
 		String[] opes=extract.split("<tr");
 		for (int partnum=1; partnum<opes.length; partnum++) {
 			display("Opération "+ partnum+" sur "+ (opes.length-1)+" de la page "+numpage, false);
@@ -61,9 +57,9 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 				logd("Proposition de catégorie");
 				continue;
 			}
-			MoneyCenterOperation ope = MoneycenterParser. getOperationFromListExtract( extr);
+			MoneycenterOperation ope = MoneycenterParser. getOperationFromListExtract( extr);
 			logd("Récupération de l'opération ", ope.getId());
-			MoneyCenterOperation op=client.getOperation(ope.getId(), Configuration.isReloadOperationPages());
+			MoneycenterOperation op=client.getOperation(ope.getId(), Configuration.isReloadOperationPages());
 			op.setChecked( ope.isChecked());
 			op.setParent( ope.getParent());
 			op.setAccount(ope.getAccount());
@@ -76,7 +72,7 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 	}
 	
 	protected String[] doInBackground(String... pages) {
-		List<MoneyCenterOperation> operationList = new ArrayList<MoneyCenterOperation>(42);
+		List<MoneycenterOperation> operationList = new ArrayList<MoneycenterOperation>(42);
 			int debut = -1,fin=-1;
 			StringBuffer html;
 		try
@@ -95,7 +91,7 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 			displayError(e);
 		}
 		String text="";
-		for ( MoneyCenterOperation operation : operationList) {
+		for ( MoneycenterOperation operation : operationList) {
 			String id = operation.getId();
 			for ( MoneycenterProperty property:MoneycenterProperty.values()) {
 				text+=id+"."+ property.getName() + ".synced="+ property.getValue( operation )+"\n";
@@ -103,7 +99,7 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 			text+="\n";
 		}
 		String csv="";
-		for ( MoneyCenterOperation op: operationList) {
+		for ( MoneycenterOperation op: operationList) {
 			String memo=op.getMemo();
 			boolean checked =op.isChecked ();
 			String date =op.getDate ();

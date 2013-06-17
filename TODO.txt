@@ -1,0 +1,27 @@
+﻿v0.1:
+MoneycenterClient.getOperation(MoneycenterOperationFromList ope, boolean forceReload):
+si ope.differs(operationFromDb), reload
+- MoneycenterOperationFromList avec checked et enlever checked de MoneycenterOperation
+- MoneycenterOperationFromEdit avec memo, numcheq, patr, contrat, groupe
+OperationChange
+- CheckOperationChange avec id et un boolean pour chaque checked
+- méthode McPersistence.uploadChanges qui prend une liste de CheckOperationChange pour être prêt à lire depuis db
+- méthode qui lit une liste de coc depuis la db et l'applique
+- ajouter une entrée de menu pour mettre à jour depuis la db
+
+v0.2:
+ajouter une colonne id clé primaire pour éviter que les opérations soient enregistrées plusieurs fois
+enregistrer au format sql date
+
+v0.X:
+OperationChange
+- AttributesOperationChange avec un id et une liste de propertyvalue pour chaque changement d'attr
+- CheckOperationChange avec id et un ou 0 attributesOporationchange pour chaque checked
+- méthode qui prend une liste de OperationChange pour être prêt à lire depuis db
+
+
+- Créer objet category
+- Changements operations depuis db
+- Constructeur de MoneycenterOperation avec champs obligatoires
+- Ajout d'un webview pour afficher les pages d'erreur
+- Quand on update le memo, si la category n'est pas définie mais qu'elle l'est dans la liste, analyser la page d'édition de l'opération

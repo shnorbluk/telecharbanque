@@ -3,7 +3,7 @@ import com.github.shnorbluk.telecharbanque.*;
 import com.github.shnorbluk.telecharbanque.util.*;
 import java.io.*;
 
-public class MoneyCenterOperation
+public class MoneycenterOperation
  {
  private String memo ;
  private String id;
@@ -200,7 +200,7 @@ public String getSubCategory (){
    return result;
  }
 
- MoneyCenterOperation () {
+ MoneycenterOperation () {
  }
  
  private static void logd(Object o) {
@@ -209,7 +209,7 @@ public String getSubCategory (){
 	 }
  }
 
- public MoneyCenterOperation (BufferedReader html, String id) throws PatternNotFoundException, IOException { 
+ public MoneycenterOperation (BufferedReader html, String id) throws PatternNotFoundException, IOException { 
   this.id=id;
 	 String extract= Utils.getExtract(html, "id=\"form_edit_operation\">", "new_groupings\\[\\]");
 	 libelle = Utils.findGroupAfterPattern(extract, "editOperation\\[libelle\\]", "value=\"([^\"]*)");

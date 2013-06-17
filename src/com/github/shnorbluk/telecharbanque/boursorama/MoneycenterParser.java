@@ -6,9 +6,9 @@ import com.github.shnorbluk.telecharbanque.util.*;
 public class MoneycenterParser {
  private static final String TAG = "MoneycenterParser";
 
- public static MoneyCenterOperation getOperationFromListExtract(
+ public static MoneycenterOperation getOperationFromListExtract(
   String extract) throws PatternNotFoundException {
-  MoneyCenterOperation ope= new MoneyCenterOperation();
+  MoneycenterOperation ope= new MoneycenterOperation();
   boolean isFrac= extract .indexOf("splitOf")>0;
   ope.setChecked(extract .indexOf("checked")!=-1);
   ope.setId( Utils.findGroupAfterPattern( extract ,"", "\\{'id':'(\\d+)'\\}" ));

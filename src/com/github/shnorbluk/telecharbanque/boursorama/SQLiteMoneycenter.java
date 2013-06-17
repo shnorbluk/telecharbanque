@@ -28,7 +28,7 @@ public class SQLiteMoneycenter extends SQLiteOpenHelper
 		}
 	}
 	
-	void setOperation(MoneyCenterOperation operation) {
+	void setOperation(MoneycenterOperation operation) {
 		open();
 		ContentValues values = new ContentValues();
 		for (MoneycenterProperty property:MoneycenterProperty.values()) {
@@ -37,6 +37,7 @@ public class SQLiteMoneycenter extends SQLiteOpenHelper
 		values.put(COL_UPTODATE, true);
 		logd("Insertion des valeurs:",values);
 		bdd.replace(TABLE_OPERATIONS, null, values);
+		logd("Insertion réussie");
 	}
 	@Override
 	public void onCreate(SQLiteDatabase db)

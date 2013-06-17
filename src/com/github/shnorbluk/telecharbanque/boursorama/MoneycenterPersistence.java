@@ -7,6 +7,7 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 import org.apache.http.client.*;
+import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.*;
 
 public class MoneycenterPersistence
 {
@@ -30,9 +31,9 @@ public class MoneycenterPersistence
 	 client.setSimulationMode(true);
  }
 
- void exportToCsv ( List<MoneyCenterOperation> operations ) throws IOException {
+ void exportToCsv ( List<MoneycenterOperation> operations ) throws IOException {
   String csv="";
-  for ( MoneyCenterOperation op: operations) {
+  for ( MoneycenterOperation op: operations) {
    String memo=op.getMemo();
    boolean checked =op.isChecked ();
    String date =op.getDate ();
@@ -61,6 +62,11 @@ public class MoneycenterPersistence
 	 return s;
  }
  
+	private void uploadChanges(List<OperationChange> changes)throws ConnectionException, IOException {
+	 for(final OperationChange change:changes) {
+		 change.perform(this);
+	 }
+ }
  void uploadOperations( String[] props) throws MalformedTextException, UnexpectedResponseException, IOException, ConnectionException, PatternNotFoundException {
   gui.display("Analyse des opérations à faire", true);
   HashMap<String,List<String[]>> pendingOperations=new HashMap<String,List<String[]>> ();
@@ -148,7 +154,7 @@ public class MoneycenterPersistence
  for (Map.Entry<String,List<String[]>> entry: syncMap.entrySet() ){
   String id=entry.getKey();
   List<String[]> propList = entry.getValue();
-  MoneyCenterOperation operation = client.getOperation(id, false);
+  MoneycenterOperation operation = client.getOperation(id, false);
   for ( String[] property : propList ) {
    String action= property[0];
    String value =property[1];

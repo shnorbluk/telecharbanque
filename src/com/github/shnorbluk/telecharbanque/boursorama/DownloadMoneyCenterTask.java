@@ -34,7 +34,7 @@ public class DownloadMoneyCenterTask
      saveAll, firstPage, lastPage, reloadPages, saveUnchecked) ;
    //persistence.exportToCsv(list); 
   } catch (Exception e) {
-   publishProgress(e.toString());
+   display(e.toString(), true);
    Log.e(TAG, "Erreur", e);
   }
   return null;

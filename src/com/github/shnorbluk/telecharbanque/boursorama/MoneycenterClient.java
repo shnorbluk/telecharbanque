@@ -48,11 +48,11 @@ public class MoneycenterClient
  private void logd(Object... o) {
 	 Utils.logd(TAG,o);
  }
- private List<MoneyCenterOperation> downloadMoneycenterOperations(
+ private List<MoneycenterOperation> downloadMoneycenterOperations(
 	 boolean saveAllMoneyCenterPages, int firstPage,
    int lastPage, boolean reloadPages,
    boolean saveChecked) throws IOException, PatternNotFoundException, ConnectionException {
-  List<MoneyCenterOperation> operationList = new ArrayList<MoneyCenterOperation> ();
+  List<MoneycenterOperation> operationList = new ArrayList<MoneycenterOperation> ();
    if (saveAllMoneyCenterPages) {
    firstPage=1;
    lastPage= hclient.getSessionInformation();
@@ -75,8 +75,8 @@ public class MoneycenterClient
   return operationList;
  }
 
- private List<MoneyCenterOperation> parseListPage(String extract) throws PatternNotFoundException, IOException, ConnectionException {
-  List<MoneyCenterOperation> list = new ArrayList<MoneyCenterOperation>();
+ private List<MoneycenterOperation> parseListPage(String extract) throws PatternNotFoundException, IOException, ConnectionException {
+  List<MoneycenterOperation> list = new ArrayList<MoneycenterOperation>();
   String[] opes=extract.split("<tr");
   for (int partnum=1; partnum<opes.length; partnum++) {
    gui.display("Opération "+ partnum+" sur "+ (opes.length-1), false);
@@ -85,9 +85,9 @@ public class MoneycenterClient
     Log.d(TAG, "Proposition de catégorie");
     continue;
    }
-   MoneyCenterOperation ope = MoneycenterParser. getOperationFromListExtract( extr);
+   MoneycenterOperation ope = MoneycenterParser. getOperationFromListExtract( extr);
    logd("Récupération de l'opération ", ope.getId());
-   MoneyCenterOperation op=getOperation(ope.getId(), false);
+   MoneycenterOperation op=getOperation(ope.getId(), false);
    op.setChecked( ope.isChecked());
    op.setParent( ope.getParent());
    op.setAccount(ope.getAccount());
@@ -97,7 +97,7 @@ public class MoneycenterClient
   return list;
  }
 
- public void postOperation (MoneyCenterOperation ope) throws UnexpectedResponseException, IOException, ConnectionException {
+ public void postOperation (MoneycenterOperation ope) throws UnexpectedResponseException, IOException, ConnectionException {
    String[] params=ope.getAsParams();
 	 String expected="Votre opération a bien été éditée";
 	 expected="Votre op.ration a bien .t. .dit.e";
@@ -142,10 +142,14 @@ public class MoneycenterClient
 	 hclient.markAsObsolete( URL_EDIT_OPERATION ,params);
  }
 
-public MoneyCenterOperation getOperation(String id, boolean online) throws IOException, PatternNotFoundException, ConnectionException {
+ private MoneycenterOperation getOperation( MoneycenterOperation operationFromListExtract, boolean forceReload ) {
+	 return operationFromListExtract;
+ }
+ 
+public MoneycenterOperation getOperation(String id, boolean online) throws IOException, PatternNotFoundException, ConnectionException {
   BufferedReader html=getOperationPageAsReader(id, online );
   try {
-   return new MoneyCenterOperation(html, id);
+   return new MoneycenterOperation(html, id);
   } catch ( PatternNotFoundException e ) {
    gui.display("La chaine '"+
      e.getPattern()+

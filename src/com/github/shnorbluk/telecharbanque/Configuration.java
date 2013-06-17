@@ -5,9 +5,7 @@ import android.content.*;
 public class Configuration
 {
  private static final int firstPage = 1;
- private static final int lastPage = 1;
 	private static final boolean reloadMcPages = true;
-	private static final boolean saveAllMcPages =false;
 	private static SharedPreferences pref;
 
 	public static String getBoursoramaLogin() {
@@ -27,7 +25,7 @@ public class Configuration
 		return firstPage;
 	}
  public static int getLastPage() {
-	 return pref.getInt("lastMcPage", 1);
+	 return Integer.parseInt(pref.getString("lastMcPage", "1"));
  }
  
  public static boolean isSaveAllMcPages() {
