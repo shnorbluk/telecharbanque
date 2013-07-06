@@ -1,6 +1,7 @@
 package com.github.shnorbluk.telecharbanque.boursorama;
 
 import android.content.*;
+import android.database.*;
 import android.database.sqlite.*;
 import com.github.shnorbluk.telecharbanque.util.*;
 
@@ -18,7 +19,7 @@ public class SQLiteMoneycenter extends SQLiteOpenHelper
 	
 	private SQLiteDatabase bdd=null;
 	public SQLiteMoneycenter(Context context) {
-		super(context, "moneycenter.db", null, 3);
+		super(context, "moneycenter.db", null, 4);
 		
 	}
 	
@@ -28,11 +29,21 @@ public class SQLiteMoneycenter extends SQLiteOpenHelper
 		}
 	}
 	
+	MoneycenterOperation getOperation(String id) {
+		open();
+		MoneycenterOperation ope=new MoneycenterOperation();
+		Cursor cursor=bdd.query(TABLE_OPERATIONS, null, MoneycenterProperty.ID.getName()+"='"+id+"'", null, null, null, null, null);
+		for (MoneycenterProperty prop:MoneycenterProperty.values()) {
+			prop.setValue(ope, cursor);
+		}
+		return ope;
+	}
+	
 	void setOperation(MoneycenterOperation operation) {
 		open();
 		ContentValues values = new ContentValues();
 		for (MoneycenterProperty property:MoneycenterProperty.values()) {
-			values.put(property.getName(), property.getValue(operation));
+			property.put(values, property.getName(), property.getValue(operation));
 		}
 		values.put(COL_UPTODATE, true);
 		logd("Insertion des valeurs:",values);
@@ -64,7 +75,7 @@ public class SQLiteMoneycenter extends SQLiteOpenHelper
 			COL_ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
 			COL_DEBIT+" BOOLEAN);");
 		db.execSQL("CREATE TABLE account"+
-		  "( account STRING PRIMARY KEY AUTOINCREMENT"+
+		  "( account STRING PRIMARY KEY, "+
 		  "solde REAL NOT NULL);");
 	}
 	

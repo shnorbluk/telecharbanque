@@ -24,14 +24,14 @@ public class DownloadMoneyCenterTask
    */
  protected String doInBackground (String... s) {
   try {
-   boolean saveAll=Configuration.isSaveAllMcPages();
+   boolean saveAllMcHistory=Configuration.isSaveAllMcHistory();
    int firstPage= Configuration.getFirstPage();
    int lastPage=Configuration.getLastPage();
-   boolean reloadPages=Configuration.isReloadMcPages();
+   boolean reloadListPages=Configuration.isReloadListPages();
    boolean saveUnchecked=true;
 
    persistence.downloadToPersistence(
-     saveAll, firstPage, lastPage, reloadPages, saveUnchecked) ;
+     saveAllMcHistory, firstPage, lastPage, reloadListPages, saveUnchecked) ;
    //persistence.exportToCsv(list); 
   } catch (Exception e) {
    display(e.toString(), true);

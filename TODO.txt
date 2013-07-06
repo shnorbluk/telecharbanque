@@ -12,6 +12,9 @@ OperationChange
 v0.2:
 ajouter une colonne id clé primaire pour éviter que les opérations soient enregistrées plusieurs fois
 enregistrer au format sql date
+effacer les logs quand on clique sur un bouton
+ajouter une option pour choisir le répertoire de travail
+- Faire en sorte que quand on demande de pas recharger les pages il ne se connecte pas pour récupérer la page ni quand les pages des opérations sont en cache
 
 v0.X:
 OperationChange
@@ -25,3 +28,5 @@ OperationChange
 - Constructeur de MoneycenterOperation avec champs obligatoires
 - Ajout d'un webview pour afficher les pages d'erreur
 - Quand on update le memo, si la category n'est pas définie mais qu'elle l'est dans la liste, analyser la page d'édition de l'opération
+- Récupérer le solde des comptes
+e

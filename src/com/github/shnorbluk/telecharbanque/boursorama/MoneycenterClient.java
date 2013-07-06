@@ -8,6 +8,7 @@ import java.io.*;
 import java.util.*;
 import org.apache.http.client.*;
 import java.security.*;
+import java.text.*;
 
 public class MoneycenterClient
 {
@@ -51,7 +52,7 @@ public class MoneycenterClient
  private List<MoneycenterOperation> downloadMoneycenterOperations(
 	 boolean saveAllMoneyCenterPages, int firstPage,
    int lastPage, boolean reloadPages,
-   boolean saveChecked) throws IOException, PatternNotFoundException, ConnectionException {
+   boolean saveChecked) throws IOException, PatternNotFoundException, ConnectionException, ParseException {
   List<MoneycenterOperation> operationList = new ArrayList<MoneycenterOperation> ();
    if (saveAllMoneyCenterPages) {
    firstPage=1;
@@ -75,7 +76,7 @@ public class MoneycenterClient
   return operationList;
  }
 
- private List<MoneycenterOperation> parseListPage(String extract) throws PatternNotFoundException, IOException, ConnectionException {
+ private List<MoneycenterOperation> parseListPage(String extract) throws PatternNotFoundException, IOException, ConnectionException, ParseException {
   List<MoneycenterOperation> list = new ArrayList<MoneycenterOperation>();
   String[] opes=extract.split("<tr");
   for (int partnum=1; partnum<opes.length; partnum++) {
@@ -143,10 +144,11 @@ public class MoneycenterClient
  }
 
  private MoneycenterOperation getOperation( MoneycenterOperation operationFromListExtract, boolean forceReload ) {
+	 
 	 return operationFromListExtract;
  }
  
-public MoneycenterOperation getOperation(String id, boolean online) throws IOException, PatternNotFoundException, ConnectionException {
+public MoneycenterOperation getOperation(String id, boolean online) throws IOException, PatternNotFoundException, ConnectionException, ParseException {
   BufferedReader html=getOperationPageAsReader(id, online );
   try {
    return new MoneycenterOperation(html, id);

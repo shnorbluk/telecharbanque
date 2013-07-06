@@ -1,11 +1,11 @@
 package com.github.shnorbluk.telecharbanque.boursorama;
 
-import android.os.*;
 import android.util.*;
 import com.github.shnorbluk.telecharbanque.*;
 import com.github.shnorbluk.telecharbanque.net.*;
 import com.github.shnorbluk.telecharbanque.util.*;
 import java.io.*;
+import java.text.*;
 import java.util.*;
 
 public class DownloadMcPageTask extends AsynchTask<String[]>
@@ -14,13 +14,14 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 	private int pageIndex;
 	private int nbOfPages;
 	private MoneycenterClient client;
-	private boolean reloadPages;
+	private boolean reloadListPage;
 	private static final String TAG="DownloadMcPageTask";
 	private static String csvFileName;
 	private final SQLiteMoneycenter db;
+	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
 
-	public void setReloadPages (boolean reloadPages) {
-	 this.reloadPages=reloadPages;
+	public void setReloadListPage (boolean reloadListPage) {
+	 this.reloadListPage=reloadListPage;
 	}
 
 	public void setMoneycenterClient (MoneycenterClient client) {
@@ -47,7 +48,7 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 		Utils.logd(TAG,o);
 	}
 	
-	private List<MoneycenterOperation> parseListPage(String extract) throws PatternNotFoundException, IOException, ConnectionException {
+	private List<MoneycenterOperation> parseListPage(String extract) throws PatternNotFoundException, IOException, ConnectionException, ParseException {
 		List<MoneycenterOperation> list = new ArrayList<MoneycenterOperation>();
 		String[] opes=extract.split("<tr");
 		for (int partnum=1; partnum<opes.length; partnum++) {
@@ -60,7 +61,7 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 			MoneycenterOperation ope = MoneycenterParser. getOperationFromListExtract( extr);
 			logd("Récupération de l'opération ", ope.getId());
 			MoneycenterOperation op=client.getOperation(ope.getId(), Configuration.isReloadOperationPages());
-			op.setChecked( ope.isChecked());
+			op.setChecked(ope.isChecked());
 			op.setParent( ope.getParent());
 			op.setAccount(ope.getAccount());
 			op.setCategoryLabel(ope.getCategoryLabel());
@@ -79,7 +80,7 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 		{
 			db.open();
 			html = client.getHClient().loadString(
-				"https://www.boursorama.com/patrimoine/moneycenter/monbudget/operations.phtml?page=" + numpage, null, reloadPages, "</tbody>");
+				"https://www.boursorama.com/patrimoine/moneycenter/monbudget/operations.phtml?page=" + numpage, null, reloadListPage, "</tbody>");
 			debut=html.indexOf( "liste-operations-page")+24;
 			fin= html.indexOf( "</tbody>", debut ); 
 			String extract=html.substring(debut,fin);
@@ -102,7 +103,7 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 		for ( MoneycenterOperation op: operationList) {
 			String memo=op.getMemo();
 			boolean checked =op.isChecked ();
-			String date =op.getDate ();
+			String date =DATE_FORMAT.format(op.getDate ());
 			String compte =op.getAccount ();
 			String libelleLong = op.getLibelle();
 			String categ = op.getCategoryLabel ();

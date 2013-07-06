@@ -1,11 +1,10 @@
 package com.github.shnorbluk.telecharbanque;
 
 import android.content.*;
+import com.github.shnorbluk.telecharbanque.util.*;
 
 public class Configuration
 {
- private static final int firstPage = 1;
-	private static final boolean reloadMcPages = true;
 	private static SharedPreferences pref;
 
 	public static String getBoursoramaLogin() {
@@ -17,19 +16,37 @@ public class Configuration
 	public static boolean isReloadOperationPages() {
 		return pref.getBoolean("reloadOperations", false);
 	}
-	public static boolean isReloadMcPages()
+	public static boolean isReloadListPages()
 	{
-		return reloadMcPages;
+//		logd("prefs=", pref.getAll());
+		boolean b= pref.getBoolean("reloadListPages", true);
+//		logd("reloadListPages="+b);
+		return b;
+	}
+	private static void logd(Object... messages) {
+		Utils.logd("Configuration", messages);
 	}
 	public static int getFirstPage() {
-		return firstPage;
+		return parseRange()[0];
+	}
+	private static int[] parseRange (){
+		String str=pref.getString("mcPages", "1");
+		String[] parts = str.split("-");
+		final int first=Integer.parseInt(parts[0]);
+		final int last;
+		if (parts.length>1) {
+			last=Integer.parseInt(parts[1]);
+		} else {
+			last=first;
+		}
+		return new int[]{first, last};
 	}
  public static int getLastPage() {
-	 return Integer.parseInt(pref.getString("lastMcPage", "1"));
+	 return parseRange()[1];
  }
  
- public static boolean isSaveAllMcPages() {
-	 return pref.getBoolean("saveAllMcPages", false);
+ public static boolean isSaveAllMcHistory() {
+	 return pref.getBoolean("saveAllMcHistory", false);
  }
  
  public static boolean isSimuMode() {

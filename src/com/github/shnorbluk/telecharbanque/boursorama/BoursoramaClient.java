@@ -78,7 +78,7 @@ public class BoursoramaClient implements SessionManager
  }
 
  public void connect() throws Exception {
-	 logd("Connexion ", Thread.currentThread().getStackTrace());
+	 logd("Connexion ");
    boolean online=true;
    String password=Configuration.getBoursoramaPassword();
    gui.display("Connexion à Boursorama  en cours",true);

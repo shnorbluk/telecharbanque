@@ -14,21 +14,24 @@
 			android:password="true">
 		</EditTextPreference>
 		<CheckBoxPreference
-			android:title="Télécharger toutes les pages" 
-			android:key="saveAllMcPages" 
-			android:summary="Récupérer toutes les pages de la liste des opérations" 
+			android:title="Télécharger tout" 
+			android:key="saveAllMcHistory" 
+			android:summary="Récupérer l'intégralité des opérations des 3 dernières années" 
 			android:inputType="number">
 		</CheckBoxPreference>
 		<EditTextPreference
-			android:title="Nombre de pages" 
-			android:key="lastMcPage" 
-			android:inputType="number"
-			android:summary="Nombre de pages de la liste d'opérations à télécharger" >
-		</EditTextPreference>
+			android:title="Pages" 
+			android:key="mcPages" 
+			android:summary="Pages de liste d'opérations à télécharger" />
 		<CheckBoxPreference 
-			android:title="Recharger toutes opérations" 
+			android:title="Recharger les listes" 
+			android:key="reloadListPages" 
+			android:summary="Recharger les pages contenant les listes d'opérations" >
+		</CheckBoxPreference>
+		<CheckBoxPreference 
+			android:title="Recharger opérations" 
 			android:key="reloadOperations" 
-			android:summary="Recharger de force, quelle que soit la date des pages enregistrées" >
+			android:summary="Recharger de force les détails de chaque opération, quelle que soit la date des pages enregistrées" >
 		</CheckBoxPreference>
 		<CheckBoxPreference 
 			android:title="Mode simulation" 

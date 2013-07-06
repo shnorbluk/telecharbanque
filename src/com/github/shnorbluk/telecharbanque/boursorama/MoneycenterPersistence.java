@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import org.apache.http.client.*;
 import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.*;
+import java.text.*;
 
 public class MoneycenterPersistence
 {
@@ -36,7 +37,7 @@ public class MoneycenterPersistence
   for ( MoneycenterOperation op: operations) {
    String memo=op.getMemo();
    boolean checked =op.isChecked ();
-   String date =op.getDate ();
+   String date =op.getDateForPage ();
    String compte =op.getAccount ();
    String libelleLong = op.getLibelle();
    String categ = op.getCategoryLabel ();
@@ -67,7 +68,7 @@ public class MoneycenterPersistence
 		 change.perform(this);
 	 }
  }
- void uploadOperations( String[] props) throws MalformedTextException, UnexpectedResponseException, IOException, ConnectionException, PatternNotFoundException {
+ void uploadOperations( String[] props) throws MalformedTextException, UnexpectedResponseException, IOException, ConnectionException, PatternNotFoundException, ParseException {
   gui.display("Analyse des opérations à faire", true);
   HashMap<String,List<String[]>> pendingOperations=new HashMap<String,List<String[]>> ();
   for (String modif:props){
@@ -108,14 +109,14 @@ public class MoneycenterPersistence
   gui.display("Modifications effectuées avec succès", true);
  }
 
- void downloadToPersistence ( boolean saveAllMcPages, int firstPage,
-   int lastPage, boolean reloadPages,
+ void downloadToPersistence ( boolean saveAllMcHistory, int firstPage,
+   int lastPage, boolean reloadListPages,
    boolean saveUnchecked ) throws ConnectionException, ExecutionException, InterruptedException, IOException {
-	   if (saveAllMcPages) {
-   firstPage=1;
-   lastPage= hclient.getSessionInformation();
-  } 
-  Log.d( TAG, "Pages "+firstPage+" à "+ lastPage);
+	if (saveAllMcHistory) {
+   		firstPage=1;
+   		lastPage= hclient.getSessionInformation();
+  	} 
+  Log.d( TAG, "Pages "+firstPage+" à "+ lastPage+" reloadListPages="+ reloadListPages);
   int nbOfPages=lastPage-firstPage+1;
   int pageIndex=1;
   String csvFile="/sdcard/Temp/mccsv"+firstPage+"-"+lastPage+".csv";
@@ -124,7 +125,7 @@ public class MoneycenterPersistence
   for (int numpage= firstPage; numpage<=lastPage; numpage++ ) {
    DownloadMcPageTask task = new DownloadMcPageTask(numpage, pageIndex++, nbOfPages, db);
    task.setMoneycenterClient(client);
-   task.setReloadPages(reloadPages);
+   task.setReloadListPage(reloadListPages);
    task.setCsvFileName(csvFile);
    task.execute("");
    task.get();
@@ -132,7 +133,7 @@ public class MoneycenterPersistence
   gui.display("Opérations téléchargées", true);
  }
 
- public void uploadPersistenceFile() throws IOException, MalformedTextException, UnexpectedResponseException, ConnectionException, PatternNotFoundException {
+ public void uploadPersistenceFile() throws IOException, MalformedTextException, UnexpectedResponseException, ConnectionException, PatternNotFoundException, ParseException {
   StringBuffer modifs=Utils.readFile ( PERSISTENCE_FILE, "iso-8859-1");
 	char firstChar=modifs.charAt(0);
 	char lastChar=modifs.charAt(modifs.length()-1);
@@ -146,7 +147,7 @@ public class MoneycenterPersistence
   uploadOperations (lines);
  }
 
- private void doActions(Map<String,List<String[]>> operations) throws UnexpectedResponseException, IOException, ConnectionException, PatternNotFoundException {
+ private void doActions(Map<String,List<String[]>> operations) throws UnexpectedResponseException, IOException, ConnectionException, PatternNotFoundException, ParseException {
  if (!operations.isEmpty()) {
   gui.display("Opérations à faire:"+ Utils.toString(operations), true); 
  }

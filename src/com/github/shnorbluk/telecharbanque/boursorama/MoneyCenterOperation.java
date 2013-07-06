@@ -2,6 +2,8 @@ package com.github.shnorbluk.telecharbanque.boursorama;
 import com.github.shnorbluk.telecharbanque.*;
 import com.github.shnorbluk.telecharbanque.util.*;
 import java.io.*;
+import java.util.*;
+import java.text.*;
 
 public class MoneycenterOperation
  {
@@ -9,7 +11,7 @@ public class MoneycenterOperation
  private String id;
  private String libelle;
  private String account;
- private String date;
+ private Date date;
  private String num_cheque;
  private float amount ;
  private String categ;
@@ -26,6 +28,8 @@ public class MoneycenterOperation
 	private String categoryLabel;
 	private static final String TAG="MoneycenterOperation";
 	private static boolean log=false;
+	private static final SimpleDateFormat DATE_DISPLAY_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
+	
 	public void setCategoryLabel(String categoryLabel) {
 		this.categoryLabel = categoryLabel;
 	}
@@ -75,14 +79,19 @@ public String getParent (){
   return parent ;
  }
 
-public void setDate (String date ) {
+public void setDate (Date date ) {
   this. date = date ;
  }
-
-public String getDate (){
+public void setDateFromPage(String dateStr) throws ParseException {
+ DATE_DISPLAY_FORMAT.parse(dateStr);
+ }
+public Date getDate (){
   return date ;
  }
 
+ public String getDateForPage() {
+	 return DATE_DISPLAY_FORMAT.format(date);
+ }
  public boolean isChecked() {
   return checked;
  }
@@ -144,7 +153,7 @@ public String getSubCategory (){
  "id", id,
  "editOperation[libelle]", libelle,
  "editOperation[id_account]", account, 
- "editOperation[date]", date,
+ "editOperation[date]", MoneycenterOperation.DATE_DISPLAY_FORMAT.format(date),
  "editOperation[num_cheque]", num_cheque,
  "editOperation[amount]", Float.toString(amount), 
  "editOperation[memo]", memo, 
@@ -209,14 +218,15 @@ public String getSubCategory (){
 	 }
  }
 
- public MoneycenterOperation (BufferedReader html, String id) throws PatternNotFoundException, IOException { 
+ public MoneycenterOperation (BufferedReader html, String id) throws PatternNotFoundException, IOException, ParseException { 
   this.id=id;
 	 String extract= Utils.getExtract(html, "id=\"form_edit_operation\">", "new_groupings\\[\\]");
 	 libelle = Utils.findGroupAfterPattern(extract, "editOperation\\[libelle\\]", "value=\"([^\"]*)");
 	 libelle = android.text.Html.fromHtml( libelle ).toString();
   account = Utils. findGroupAfterPattern(extract,"editOperation\\[id_account\\]", "value=\"([^\"]*)");
 	 account = android.text.Html.fromHtml( account ).toString();
-  date = Utils. findGroupAfterPattern(extract,"editOperation\\[date\\]", "value=\"([^\"]*)");
+  String dateStr = Utils. findGroupAfterPattern(extract,"editOperation\\[date\\]", "value=\"([^\"]*)");
+  date = MoneycenterOperation.DATE_DISPLAY_FORMAT.parse(dateStr);
   num_cheque = Utils. findGroupAfterPattern(extract,"editOperation\\[num_cheque\\]", "value=\"([^\"]*)");
   amount = Float.parseFloat(Utils. findGroupAfterPattern(extract,"editOperation\\[amount\\]", "value=\"([^\"]*)"));
   memo = Utils. findGroupAfterPattern(extract,"editOperation\\[memo\\]", ">([^<]*)</textarea");
