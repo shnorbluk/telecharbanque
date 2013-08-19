@@ -4,6 +4,7 @@ import android.content.*;
 import android.database.*;
 import android.database.sqlite.*;
 import com.github.shnorbluk.telecharbanque.util.*;
+import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.*;
 
 public class SQLiteMoneycenter extends SQLiteOpenHelper
 {
@@ -29,9 +30,9 @@ public class SQLiteMoneycenter extends SQLiteOpenHelper
 		}
 	}
 	
-	MoneycenterOperation getOperation(String id) {
+	McOperationInDb getOperation(String id) {
 		open();
-		MoneycenterOperation ope=new MoneycenterOperation();
+		McOperationInDb ope=new McOperationInDb();
 		Cursor cursor=bdd.query(TABLE_OPERATIONS, null, MoneycenterProperty.ID.getName()+"='"+id+"'", null, null, null, null, null);
 		for (MoneycenterProperty prop:MoneycenterProperty.values()) {
 			prop.setValue(ope, cursor);
@@ -39,7 +40,7 @@ public class SQLiteMoneycenter extends SQLiteOpenHelper
 		return ope;
 	}
 	
-	void setOperation(MoneycenterOperation operation) {
+	void setOperation(McOperationInDb operation) {
 		open();
 		ContentValues values = new ContentValues();
 		for (MoneycenterProperty property:MoneycenterProperty.values()) {

@@ -46,7 +46,7 @@ public class HClient
 	}
 	
 	@Deprecated
- private StringBuffer loadString(String url, String[] params, boolean fromNet, String patternToCheck,String fileName ) throws IOException, ConnectionException {
+ private StringBuffer loadString(String url, String[] params, boolean fromNet, String patternToCheck, String fileName ) throws IOException, ConnectionException {
   String method=params==null?"get":"post";
   String filePath= TEMP_DIR+"/"+method+"/"+fileName+".html";
   Log.i(TAG, "Looking for file "+ filePath);
@@ -58,7 +58,7 @@ public class HClient
 	  connectIfNeeded();
    return loadStringFromNet(url, params, filePath, patternToCheck );
   } else {
-   return loadStringFromFile(url, params, filePath );
+   return loadStringFromFile(url, params, filePath, patternToCheck );
   }
  }
 
@@ -111,9 +111,16 @@ public class HClient
 	}
 	
  @Deprecated
- private StringBuffer loadStringFromFile(String url, String[] params, String filename) throws IOException {
-  Log.i(TAG, "Loading file "+ filename );
-  return Utils.readFile(filename,"iso-8859-1");
+ private StringBuffer loadStringFromFile(String url, String[] params, String filename, String patternToCheck) throws IOException {
+  logd("Loading file ", filename );
+  StringBuffer str= Utils.readFile(filename,"iso-8859-1");
+  if (str.toString().indexOf(patternToCheck) != -1) {
+      return str;
+  } else {
+      logd("La chaine "+patternToCheck+" n'a pas été trouvée dans le fichier " + filename+". Nouveau téléchargement du fichier.");
+      new File(filename).delete();
+      return loadStringFromNet(url, params, filename, patternToCheck);
+  }
  }
  
 	private BufferedReader getReaderFromFile(String url, String[] params, String filename) throws IOException {

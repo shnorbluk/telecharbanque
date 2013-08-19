@@ -81,11 +81,14 @@ public class BoursoramaClient implements SessionManager
 	 logd("Connexion ");
    boolean online=true;
    String password=Configuration.getBoursoramaPassword();
+   if (password == null) {
+   	throw new Exception("Le mot de passe n'a pas ete saisi.");
+   }
    gui.display("Connexion à Boursorama  en cours",true);
    //if (simu) return;
 		  StringBuffer connectionPage=hclient.loadString("https://www.boursorama.com/connexion.phtml?", null, online, "");
 		  String connectionPageStr=connectionPage.toString();
-		  String imgUrl=Utils.findGroupAfterPattern(connectionPageStr, "<img id=\"img-pad", "src=\"([^\"]*)");
+		  String imgUrl=Utils.findGroupAfterPattern(connectionPageStr, "<img id=\"login-pad_pad", "src=\"([^\"]*)");
 		  imgUrl="https://www.boursorama.com"+imgUrl;
 		  String filePath= MoneycenterPersistence.TEMP_DIR+"/boursopad.gif";
 		  if (online){
@@ -96,13 +99,9 @@ public class BoursoramaClient implements SessionManager
 		  String[] parts = connectionPageStr.split ("<area shape");
 		  HashMap<String,String> codeMap=new HashMap<String,String>(12);
 		  for(int i=1; i<parts.length; i++){
-			  int start=parts[i].indexOf("\"",40)+1;
-			  int end=parts[i].indexOf(",", start);
-			  end=parts[i].indexOf(",", end+1);
-			  String coord=parts[i].substring(start,end);
+              String coord=Utils.findGroupAfterPattern(parts[i], "coords=","\"([0-9]+,[0-9]+)");
 			  logd("coord=",coord);
-			  end= parts[i]. indexOf("+=", 87);
-			  String code=parts[i]. substring(end+4, end+8);
+			  String code=Utils.findGroupAfterPattern(parts[i], "\\+= '", "(....|)'");
 			  logd("code=",code);
 			  codeMap.put(coord,code);
 		  }

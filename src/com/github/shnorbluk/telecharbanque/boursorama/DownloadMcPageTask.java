@@ -2,6 +2,7 @@ package com.github.shnorbluk.telecharbanque.boursorama;
 
 import android.util.*;
 import com.github.shnorbluk.telecharbanque.*;
+import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.*;
 import com.github.shnorbluk.telecharbanque.net.*;
 import com.github.shnorbluk.telecharbanque.util.*;
 import java.io.*;
@@ -48,9 +49,10 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 		Utils.logd(TAG,o);
 	}
 	
-	private List<MoneycenterOperation> parseListPage(String extract) throws PatternNotFoundException, IOException, ConnectionException, ParseException {
-		List<MoneycenterOperation> list = new ArrayList<MoneycenterOperation>();
+	private List<McOperationInDb> parseListPage(String extract) throws PatternNotFoundException, IOException, ConnectionException, ParseException {
+		List<McOperationInDb> list = new ArrayList<McOperationInDb>(42);
 		String[] opes=extract.split("<tr");
+        MoneycenterOperationFromList previousOpe=null;
 		for (int partnum=1; partnum<opes.length; partnum++) {
 			display("Opération "+ partnum+" sur "+ (opes.length-1)+" de la page "+numpage, false);
 			String extr=opes[partnum];
@@ -58,49 +60,56 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 				logd("Proposition de catégorie");
 				continue;
 			}
-			MoneycenterOperation ope = MoneycenterParser. getOperationFromListExtract( extr);
-			logd("Récupération de l'opération ", ope.getId());
-			MoneycenterOperation op=client.getOperation(ope.getId(), Configuration.isReloadOperationPages());
-			op.setChecked(ope.isChecked());
-			op.setParent( ope.getParent());
-			op.setAccount(ope.getAccount());
-			op.setCategoryLabel(ope.getCategoryLabel());
-			list.add( op);
-			logd("Enregistrement de l'opération dans la base de données");
-			db.setOperation(op);
+			MoneycenterOperationFromList opeFromList = MoneycenterParser. getOperationFromListExtract( extr, previousOpe);
+            previousOpe=opeFromList;
+			logd("Récupération de l'opération ", opeFromList.getId());
+			McOperationFromEdit opFromEdit=client.getOperation(opeFromList.getId(), Configuration.isReloadOperationPages());
+			McOperationInDb opeForDb = new McOperationInDb();
+			opeForDb.setChecked(opeFromList.isChecked());
+			opeForDb.setParent( opeFromList.getParent());
+			opeForDb.setAccount(opeFromList.getAccount());
+			opeForDb.setCategoryLabel(opeFromList.getCategoryLabel());
+			opeForDb.setLibelle(opFromEdit.getLibelle());
+			opeForDb.setId(opeFromList.getId());
+			opeForDb.setAmount(opeFromList.getAmount());
+			opeForDb.setDate(opeFromList.getDate());
+			opeForDb.setMemo(opFromEdit.getMemo());
+			opeForDb.setNumCheque(opeFromList.getNumCheque());
+			logd("Enregistrement de l'opération "+opeForDb.getId()+" dans la base de données");
+			db.setOperation(opeForDb);
+			list.add(opeForDb);
 		}
 		return list;
 	}
 	
 	protected String[] doInBackground(String... pages) {
-		List<MoneycenterOperation> operationList = new ArrayList<MoneycenterOperation>(42);
+		List<McOperationInDb> operationList = new ArrayList<McOperationInDb>(42);
 			int debut = -1,fin=-1;
-			StringBuffer html;
 		try
 		{
 			db.open();
-			html = client.getHClient().loadString(
-				"https://www.boursorama.com/patrimoine/moneycenter/monbudget/operations.phtml?page=" + numpage, null, reloadListPage, "</tbody>");
-			debut=html.indexOf( "liste-operations-page")+24;
-			fin= html.indexOf( "</tbody>", debut ); 
-			String extract=html.substring(debut,fin);
+			BufferedReader html = client.getHClient().getReaderFromUrl( "https://www.boursorama.com/patrimoine/moneycenter/monbudget/operations.phtml?page=" + numpage, null, reloadListPage, "</tbody>");
+            String extract=Utils.getExtract(html, "liste-operations-page", "</tbody>");
 			operationList.addAll ( parseListPage (extract));
 
 		}
 		catch (Exception e)
 		{
 			displayError(e);
+            return null;
 		}
 		String text="";
-		for ( MoneycenterOperation operation : operationList) {
+		logd("Nombre d'opérations à exporter:",operationList.size());
+		for ( McOperationInDb operation : operationList) {
 			String id = operation.getId();
 			for ( MoneycenterProperty property:MoneycenterProperty.values()) {
 				text+=id+"."+ property.getName() + ".synced="+ property.getValue( operation )+"\n";
 			}
 			text+="\n";
 		}
+		logd("Texte a sauver pour la page:", text);
 		String csv="";
-		for ( MoneycenterOperation op: operationList) {
+		for ( McOperationInDb op: operationList) {
 			String memo=op.getMemo();
 			boolean checked =op.isChecked ();
 			String date =DATE_FORMAT.format(op.getDate ());
@@ -116,21 +125,24 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 				";"+MoneycenterPersistence.csvEscape(parent); 
 			csv+=csvline+ "\n";
 		}
+		logd("CSV a sauver pour la page:", text);
 	return new String[]{text,csv};
 	}
 
  @Override
  protected void onPostExecute(String[] result) {
-	 try
-	 {
-		 Utils.writeToFile(result[0], MoneycenterPersistence.PERSISTENCE_FILE, true);
-		 Utils.writeToFile(result[1], csvFileName, true);
-		 display("La page "+numpage+" a été téléchargée.", true);
-	 }
-	 catch (IOException e)
-	 {
-		 displayError(e);
-	 }
+     if (result != null) {
+         try
+         {
+             Utils.writeToFile(result[0], MoneycenterPersistence.PERSISTENCE_FILE, true);
+             Utils.writeToFile(result[1], csvFileName, true);
+             display("La page "+numpage+" a été téléchargée.", true);
+         }
+         catch (IOException e)
+         {
+             displayError(e);
+         }
+     }
  }
 
  private void displayError(Exception e) {

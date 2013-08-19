@@ -32,12 +32,12 @@ public class MoneycenterPersistence
 	 client.setSimulationMode(true);
  }
 
- void exportToCsv ( List<MoneycenterOperation> operations ) throws IOException {
+ void exportToCsv ( List<McOperationInDb> operations ) throws IOException {
   String csv="";
-  for ( MoneycenterOperation op: operations) {
+  for ( McOperationInDb op: operations) {
    String memo=op.getMemo();
    boolean checked =op.isChecked ();
-   String date =op.getDateForPage ();
+   String date =op.getDateAsString ();
    String compte =op.getAccount ();
    String libelleLong = op.getLibelle();
    String categ = op.getCategoryLabel ();
@@ -63,7 +63,7 @@ public class MoneycenterPersistence
 	 return s;
  }
  
-	private void uploadChanges(List<OperationChange> changes)throws ConnectionException, IOException {
+	private void uploadChanges(List<? extends OperationChange> changes)throws ConnectionException, IOException {
 	 for(final OperationChange change:changes) {
 		 change.perform(this);
 	 }
@@ -99,7 +99,9 @@ public class MoneycenterPersistence
     boolean checked=Boolean.valueOf(value);
     doActions (pendingOperations);
     gui.display("Pointage de l'opération "+id+":"+checked, false);
-    pointeOperation(id, checked);
+	final CheckOperationChange changeToDo = new CheckOperationChange(id, checked, null);
+	final List<? extends OperationChange> changesToDo=Arrays.asList(changeToDo);
+	uploadChanges(changesToDo);
    } else {
     Log.e(TAG, "Propriété "+action+" inconnue.");
     System.exit(1);
@@ -128,7 +130,9 @@ public class MoneycenterPersistence
    task.setReloadListPage(reloadListPages);
    task.setCsvFileName(csvFile);
    task.execute("");
-   task.get();
+   if (task.get() == null) {
+       break;
+    }
   }
   gui.display("Opérations téléchargées", true);
  }
@@ -152,10 +156,12 @@ public class MoneycenterPersistence
   gui.display("Opérations à faire:"+ Utils.toString(operations), true); 
  }
  Map<String,List<String[]>> syncMap = Collections.synchronizedMap(operations);
- for (Map.Entry<String,List<String[]>> entry: syncMap.entrySet() ){
+ Iterator<Map.Entry<String,List<String[]>>> it=syncMap.entrySet().iterator();
+ while (it.hasNext()) {
+  Map.Entry<String,List<String[]>> entry= it.next();
   String id=entry.getKey();
   List<String[]> propList = entry.getValue();
-  MoneycenterOperation operation = client.getOperation(id, false);
+  McOperationFromEdit operation = client.getOperation(id, false);
   for ( String[] property : propList ) {
    String action= property[0];
    String value =property[1];
@@ -170,7 +176,7 @@ public class MoneycenterPersistence
   Log.i(TAG, "Paramètres à poster:'"+Utils.toString( params)+"'");
   client.postOperation ( operation );
   declarePropertiesAsSynced (id, propList);
-  operations.remove(id);
+  it.remove();
  }
 }
 

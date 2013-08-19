@@ -8,17 +8,20 @@ public class MoneycenterParser {
  private static final String TAG = "MoneycenterParser";
 	
 
- public static MoneycenterOperation getOperationFromListExtract(
-  String extract) throws PatternNotFoundException, ParseException {
-  MoneycenterOperation ope= new MoneycenterOperation();
+ public static MoneycenterOperationFromList getOperationFromListExtract(
+  String extract, MoneycenterOperationFromList prev) throws PatternNotFoundException, ParseException {
+  MoneycenterOperationFromList ope= new MoneycenterOperationFromList();
   boolean isFrac= extract .indexOf("splitOf")>0;
   ope.setChecked(extract .indexOf("checked")!=-1);
   ope.setId( Utils.findGroupAfterPattern( extract ,"", "\\{'id':'(\\d+)'\\}" ));
   ope.setLibelle( Utils. findGroupAfterPattern( extract , "operation-libelle", "title=\"[^\"]*\">\\w*([^<]*)\\w*<").trim());
   if (!isFrac) {
-	  String dateStr=Utils. findGroupAfterPattern( extract , "operation-date\">","([\\d/]*)");
+	String dateStr=Utils. findGroupAfterPattern( extract , "operation-date\">","([\\d/]*)");
    ope.setDateFromPage(dateStr);
    ope.setAccount( Utils. findGroupAfterPattern( extract , "operation-account\" title=\"","([^\"]*)\"")); 
+  } else {
+      ope.setDate(prev.getDate());
+      ope.setAccount(prev.getAccount());
   }
   String category;
   if ( extract .indexOf( "operation-category\"  title=\"" )>0) {
@@ -39,6 +42,6 @@ public class MoneycenterParser {
   return ope;
  }
  static void logd(String... msg) {
-	 Utils.logd(TAG, msg);
+	 Utils.logd(TAG, (Object[])msg);
  }
 }

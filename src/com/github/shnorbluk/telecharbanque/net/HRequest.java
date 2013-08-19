@@ -3,6 +3,7 @@ package com.github.shnorbluk.telecharbanque.net;
 import android.util.*;
 import com.github.shnorbluk.telecharbanque.*;
 import com.github.shnorbluk.telecharbanque.util.*;
+import java.net.*;
 import java.io.*;
 import org.apache.http.*;
 import org.apache.http.client.*;
@@ -24,16 +25,13 @@ public class HRequest
  public static HRequest execReq(HttpClient client, HttpUriRequest req, UI gui) throws IOException, IllegalStateException {
   HttpResponse response=null;
   Log.d(TAG," execReq("+req);
-  for (int delay = 1; delay <= 1; delay*=2){
+ for (int delay = 1; delay <= 10; delay*=2){
+   boolean ok=false;
    try {
     response = client.execute(req); 
-    break;
    } catch ( HttpHostConnectException e) {
     e.printStackTrace();
-    Log.w(TAG, "Erreur sur la requête "+req+
-     ". Nouvelle tentative dans "+delay+
-     " secondes.");
-     
+    gui.display("Erreur sur la requête"+req, true);
    } catch (Exception e) {
     Log.e(TAG, " exception autre connexion", e);
     if(gui!=null) {
@@ -41,11 +39,17 @@ public class HRequest
     }
     e.printStackTrace();
    }
+    if (response == null) {
+     logd("response null");
+     gui.display( "Nouvelle tentative dans "+delay+
+     " secondes.", false);
+     continue;
+    }
+    if (response.getEntity() == null) logd("entity null");
+    InputStream is= response.getEntity().getContent() ; 
+    return new HRequest(is);
   }
-  if (response == null) logd("response null");
-  if (response.getEntity() == null) logd("entity null");
-  InputStream is= response.getEntity().getContent() ; 
-  return new HRequest(is);
+  throw new ConnectException("La requete a echoue");
  }
  public StringBuilder getContent () throws UnsupportedEncodingException, IOException { 
    InputStreamReader b= new InputStreamReader(is,"ISO-8859-1") ;

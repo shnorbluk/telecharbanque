@@ -7,34 +7,34 @@ import java.util.*;
 import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.*;
 import android.webkit.*;
 
-public abstract class MoneycenterProperty<T> extends Enum<MoneycenterProperty<T>>
+public abstract class MoneycenterProperty<T>
  {
 	 private static final SimpleDateFormat DB_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
  public static final McStringProperty ID=new McStringProperty("id", "NOT NULL PRIMARY KEY"){
 	 @Override
-	 public String getValue(MoneycenterOperation ope) {
+	 public String getValue(McOperationInDb ope) {
 		 return ope.getId();
 	 }
 	 @Override
-	 public void setValue(MoneycenterOperation ope, String value) {
+	 public void setValue(McOperationInDb ope, String value) {
 		 ope.setId(value);
 	 }
  };
 	public static final McStringProperty LIBELLE= new McStringProperty("libelle", "NOT NULL") {
-		public String getValue ( MoneycenterOperation ope) {
+		public String getValue ( McOperationInDb ope) {
 			return ope.getLibelle();
 		}
 		@Override
-		public void setValue(MoneycenterOperation ope, String val) {
+		public void setValue(McOperationInDb ope, String val) {
 			ope.setLibelle(val);
 		}
  };
 	public static final McStringProperty MEMO= new McStringProperty("memo", "") {
-	 public String getValue ( MoneycenterOperation ope) {
+	 public String getValue ( McOperationInDb ope) {
 		 return ope.getMemo();
 	 }
 	 @Override
-		public void setValue(MoneycenterOperation ope, String val) {
+		public void setValue(McOperationInDb ope, String val) {
 			ope.setMemo(val);
 		}
  };
@@ -43,10 +43,10 @@ public abstract class MoneycenterProperty<T> extends Enum<MoneycenterProperty<T>
 		public void put (ContentValues values, String key, Date value) {
 			values.put(key, DB_DATE_FORMAT.format(value));
 		}
-	 public Date getValue ( MoneycenterOperation ope) {
+		public Date getValue ( McOperationInDb ope) {
 		 return ope.getDate();
 	 }
-		public void setValue(MoneycenterOperation ope, Cursor cursor) {
+		public void setValue(McOperationInDb ope, Cursor cursor) {
 			try {
 				ope.setDate(DB_DATE_FORMAT.parse(cursor.getString(ordinal())));
 			} catch (ParseException e) {
@@ -56,46 +56,46 @@ public abstract class MoneycenterProperty<T> extends Enum<MoneycenterProperty<T>
 		}
  };
 	public static final MoneycenterProperty<Float> AMOUNT= new MoneycenterProperty<Float>("amount", "REAL", "NOT NULL") {
-	 public Float getValue ( MoneycenterOperation ope) {
+		public Float getValue ( McOperationInDb ope) {
 		 return ope.getAmount();
 	 }
 	 @Override
 	 public void put(ContentValues values, String key, Float value) {
 		 values.put(key, value);
 	 }
-	 public void setValue(MoneycenterOperation ope, Cursor cursor){
+		public void setValue(McOperationInDb ope, Cursor cursor){
 		 ope.setAmount(cursor.getFloat(ordinal()));
 	 }
  };
  public static final McStringProperty CATEGORY= new McStringProperty("category", ""){
-	 public String getValue ( MoneycenterOperation ope) {
+	 public String getValue ( McOperationInDb ope) {
 		 return ope.getCategory();
 	 }
-	 public void setValue(MoneycenterOperation ope, String val) {
+	 public void setValue(McOperationInDb ope, String val) {
 		ope.setCategory(val);
 	}
  };
 	public static final McStringProperty CATEGLABEL =new McStringProperty("categoryLabel", "") {
-	 public String getValue (MoneycenterOperation ope) {
+		public String getValue (McOperationInDb ope) {
 		 return ope.getCategoryLabel();
 	 }
-	public void setValue(MoneycenterOperation ope, String val) {
+		public void setValue(McOperationInDb ope, String val) {
 		ope.setCategoryLabel(val);
 	}
  };
 	public static final McStringProperty ACCOUNT= new McStringProperty("account", "NOT NULL"){
-	 public String getValue ( MoneycenterOperation ope) {
+		public String getValue ( McOperationInDb ope) {
 		 return ope.getAccount();
 	 }
-	public void setValue(MoneycenterOperation ope, String val) {
+		public void setValue(McOperationInDb ope, String val) {
 		ope.setAccount(val);
 	}
  };
 	public static final MoneycenterProperty<Boolean> CHECKED= new MoneycenterProperty<Boolean>("checked", "BOOLEAN", "NOT NULL") {
-	 public Boolean getValue ( MoneycenterOperation ope) {
+		public Boolean getValue ( McOperationInDb ope) {
 		 return ope.isChecked();
 	 }
-	public void setValue(MoneycenterOperation ope, Cursor cursor) {
+		public void setValue(McOperationInDb ope, Cursor cursor) {
 		ope.setChecked(cursor.getInt(ordinal())==1);
 	}
 	@Override
@@ -104,10 +104,10 @@ public abstract class MoneycenterProperty<T> extends Enum<MoneycenterProperty<T>
 	}
  };
 	public static final McStringProperty PARENT = new McStringProperty("parent", ""){
-	 public String getValue ( MoneycenterOperation ope) {
+		public String getValue ( McOperationInDb ope) {
 		 return ope.getParent();
 	 }
-	 public void setValue(MoneycenterOperation ope, String val) {
+		public void setValue(McOperationInDb ope, String val) {
 		 ope.setParent(val);
 	}
  };
@@ -116,10 +116,12 @@ public abstract class MoneycenterProperty<T> extends Enum<MoneycenterProperty<T>
  private final String sqlConstraint;
  private static int ord=0;
  protected MoneycenterProperty (String name, String type, String sqlConstraint) {
-  super(name, ord++);
   this.name= name;
   this.type=type;
   this.sqlConstraint = sqlConstraint;
+ }
+ protected int ordinal() {
+  return ord;
  }
  public String getName () {
   return name;
@@ -127,8 +129,8 @@ public abstract class MoneycenterProperty<T> extends Enum<MoneycenterProperty<T>
  public String getSqlType() {
 	 return type+" "+sqlConstraint;
  }
- public abstract T getValue ( MoneycenterOperation ope) ;
- public abstract void setValue(MoneycenterOperation ope, Cursor cursor);
+ public abstract T getValue ( McOperationInDb ope) ;
+ public abstract void setValue(McOperationInDb ope, Cursor cursor);
  public abstract void put(ContentValues values, String name, T value);
  public static MoneycenterProperty[] values() {
 	 return new MoneycenterProperty[] {

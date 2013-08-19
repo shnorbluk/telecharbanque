@@ -2,13 +2,13 @@ package com.github.shnorbluk.telecharbanque.boursorama;
 
 import android.util.*;
 import com.github.shnorbluk.telecharbanque.*;
+import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.*;
 import com.github.shnorbluk.telecharbanque.net.*;
 import com.github.shnorbluk.telecharbanque.util.*;
 import java.io.*;
+import java.text.*;
 import java.util.*;
 import org.apache.http.client.*;
-import java.security.*;
-import java.text.*;
 
 public class MoneycenterClient
 {
@@ -49,56 +49,8 @@ public class MoneycenterClient
  private void logd(Object... o) {
 	 Utils.logd(TAG,o);
  }
- private List<MoneycenterOperation> downloadMoneycenterOperations(
-	 boolean saveAllMoneyCenterPages, int firstPage,
-   int lastPage, boolean reloadPages,
-   boolean saveChecked) throws IOException, PatternNotFoundException, ConnectionException, ParseException {
-  List<MoneycenterOperation> operationList = new ArrayList<MoneycenterOperation> ();
-   if (saveAllMoneyCenterPages) {
-   firstPage=1;
-   lastPage= hclient.getSessionInformation();
-  } 
-  Log.d( TAG, "Pages "+firstPage+" à "+ lastPage);
-  nbOfPages=lastPage-firstPage+1;
-  int pageIndex=1;
-  for (int numpage= firstPage; numpage<=lastPage; numpage++ ) {
-   gui.display("Page "+(pageIndex++)+" sur "+nbOfPages+": Page "+numpage, true);
-   int debut = -1,fin=-1;
-   StringBuffer html;
-   html=hclient.loadString(
-     "https://www.boursorama.com/patrimoine/moneycenter/monbudget/operations.phtml?page="+numpage, null, reloadPages, "</tbody>" );
- 
-	 debut=html.indexOf( "liste-operations-page")+24;
-	 fin= html.indexOf( "</tbody>", debut ); 
-   String extract=html.substring(debut,fin);
-   operationList.addAll ( parseListPage (extract));
-  }
-  return operationList;
- }
 
- private List<MoneycenterOperation> parseListPage(String extract) throws PatternNotFoundException, IOException, ConnectionException, ParseException {
-  List<MoneycenterOperation> list = new ArrayList<MoneycenterOperation>();
-  String[] opes=extract.split("<tr");
-  for (int partnum=1; partnum<opes.length; partnum++) {
-   gui.display("Opération "+ partnum+" sur "+ (opes.length-1), false);
-  String extr=opes[partnum];
-   if ( extr .indexOf("class=\"createRule\"")>0) {
-    Log.d(TAG, "Proposition de catégorie");
-    continue;
-   }
-   MoneycenterOperation ope = MoneycenterParser. getOperationFromListExtract( extr);
-   logd("Récupération de l'opération ", ope.getId());
-   MoneycenterOperation op=getOperation(ope.getId(), false);
-   op.setChecked( ope.isChecked());
-   op.setParent( ope.getParent());
-   op.setAccount(ope.getAccount());
-   op.setCategoryLabel(ope.getCategoryLabel());
-   list.add( op);
-  }
-  return list;
- }
-
- public void postOperation (MoneycenterOperation ope) throws UnexpectedResponseException, IOException, ConnectionException {
+ public void postOperation (McOperationFromEdit ope) throws UnexpectedResponseException, IOException, ConnectionException {
    String[] params=ope.getAsParams();
 	 String expected="Votre opération a bien été éditée";
 	 expected="Votre op.ration a bien .t. .dit.e";
@@ -148,10 +100,10 @@ public class MoneycenterClient
 	 return operationFromListExtract;
  }
  
-public MoneycenterOperation getOperation(String id, boolean online) throws IOException, PatternNotFoundException, ConnectionException, ParseException {
+public McOperationFromEdit getOperation(String id, boolean online) throws IOException, PatternNotFoundException, ConnectionException, ParseException {
   BufferedReader html=getOperationPageAsReader(id, online );
   try {
-   return new MoneycenterOperation(html, id);
+   return new McOperationFromEdit(html, id);
   } catch ( PatternNotFoundException e ) {
    gui.display("La chaine '"+
      e.getPattern()+
