@@ -128,7 +128,7 @@ public class Utils
  //Log.d(TAG,"Recherche de "+regexGroup+" à partir de "+i);
  if (matcher.find( i )) {
   try {
-   return matcher.group(1);
+	  return android.text.Html.fromHtml( matcher.group(1)).toString();
   } catch (Exception e) {
    Log.e(TAG,"La recherche à échoué", e);
    Log.e(TAG, "Chaine recherchée:"+regexGroup);

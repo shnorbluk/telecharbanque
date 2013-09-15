@@ -22,7 +22,7 @@ public class MoneycenterPersistence
 	private final SQLiteMoneycenter db;
 
 	public MoneycenterPersistence( HttpClient httpClient, UI gui, final SQLiteMoneycenter db) {
-  this. client= new MoneycenterClient(httpClient, gui);
+  this. client= new MoneycenterClient(httpClient, gui, db);
   hclient=client.getHClient();
   this.gui=gui;
   this.db=db;
@@ -110,7 +110,49 @@ public class MoneycenterPersistence
   doActions (pendingOperations);
   gui.display("Modifications effectuées avec succès", true);
  }
+	public List<McOperationInDb> parseListPage(boolean reloadListPage, UI gui, int numpage) throws PatternNotFoundException, IOException, ConnectionException, ParseException {
+		db.open();
+		BufferedReader html = client.getHClient().getReaderFromUrl( "https://www.boursorama.com/patrimoine/moneycenter/monbudget/operations.phtml?page=" + numpage, null, reloadListPage, "</tbody>");
+		String extract=Utils.getExtract(html, "liste-operations-page", "</tbody>");
+		List<McOperationInDb> list = new ArrayList<McOperationInDb>(42);
+		String[] opes=extract.split("<tr");
+        MoneycenterOperationFromList previousOpe=null;
+		for (int partnum=1; partnum<opes.length; partnum++) {
+			gui.display("Opération "+ partnum+" sur "+ (opes.length-1)+" de la page "+numpage, false);
+			String extr=opes[partnum];
+			if ( extr .indexOf("class=\"createRule\"")>0) {
+				logd("Proposition de catégorie");
+				continue;
+			}
+			MoneycenterOperationFromList opeFromList = MoneycenterParser. getOperationFromListExtract( extr, previousOpe);
+            previousOpe=opeFromList;
+			String id = opeFromList.getId();
+			logd("Récupération de l'opération ", id);
 
+			McOperationInDb opeFromDb = db.getOperation(id);
+			logd("Operation trouvee en base:",opeFromDb);
+			if (opeFromDb == null || !opeFromList.equals(opeFromDb)) {
+			McOperationFromEdit opFromEdit=client.getOperation(id, Configuration.isReloadOperationPages());
+				McOperationInDb opeForDb = new McOperationInDb();
+			opeForDb.setChecked(opeFromList.isChecked());
+			opeForDb.setParent( opeFromList.getParent());
+			opeForDb.setAccount(opeFromList.getAccount());
+			opeForDb.setCategoryLabel(opeFromList.getCategoryLabel());
+			opeForDb.setLibelle(opFromEdit.getLibelle());
+			opeForDb.setId(id);
+			opeForDb.setAmount(opeFromList.getAmount());
+			opeForDb.setDate(opeFromList.getDate());
+			opeForDb.setMemo(opFromEdit.getMemo());
+			opeForDb.setNumCheque(opeFromList.getNumCheque());
+			logd("Enregistrement de l'opération "+opeForDb.getId()+" dans la base de données");
+			db.setOperation(opeForDb);
+				opeFromDb = opeForDb;
+			}
+			list.add(opeFromDb);
+		}
+		return list;
+	}
+	
  void downloadToPersistence ( boolean saveAllMcHistory, int firstPage,
    int lastPage, boolean reloadListPages,
    boolean saveUnchecked ) throws ConnectionException, ExecutionException, InterruptedException, IOException {
@@ -125,9 +167,7 @@ public class MoneycenterPersistence
   Utils.writeToFile("",PERSISTENCE_FILE,false);
   Utils.writeToFile("",csvFile,false);
   for (int numpage= firstPage; numpage<=lastPage; numpage++ ) {
-   DownloadMcPageTask task = new DownloadMcPageTask(numpage, pageIndex++, nbOfPages, db);
-   task.setMoneycenterClient(client);
-   task.setReloadListPage(reloadListPages);
+   DownloadMcPageTask task = new DownloadMcPageTask(numpage, pageIndex++, nbOfPages, this);
    task.setCsvFileName(csvFile);
    task.execute("");
    if (task.get() == null) {

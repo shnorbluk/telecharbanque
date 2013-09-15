@@ -11,7 +11,13 @@ public abstract class McStringProperty<OPE extends MoneycenterOperation> extends
 	}
 	@Override
 		public void setValue(McOperationInDb ope, Cursor cursor) {
+			try {
+				cursor.moveToFirst();
 			setValue(ope, cursor.getString(ordinal()));
+			} catch (CursorIndexOutOfBoundsException e) {
+				throw new RuntimeException("property "+getName()+" ordinal="+
+				ordinal()+" position="+cursor.getPosition()+" count="+cursor.getCount(), e);
+			}
 		}
 		protected abstract void setValue(McOperationInDb ope, String val);
 		

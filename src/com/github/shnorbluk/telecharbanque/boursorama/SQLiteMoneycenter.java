@@ -20,7 +20,7 @@ public class SQLiteMoneycenter extends SQLiteOpenHelper
 	
 	private SQLiteDatabase bdd=null;
 	public SQLiteMoneycenter(Context context) {
-		super(context, "moneycenter.db", null, 4);
+		super(context, "moneycenter.db", null, 1);
 		
 	}
 	
@@ -33,7 +33,9 @@ public class SQLiteMoneycenter extends SQLiteOpenHelper
 	McOperationInDb getOperation(String id) {
 		open();
 		McOperationInDb ope=new McOperationInDb();
-		Cursor cursor=bdd.query(TABLE_OPERATIONS, null, MoneycenterProperty.ID.getName()+"='"+id+"'", null, null, null, null, null);
+	//	Cursor cursor=bdd.query(TABLE_OPERATIONS, null, MoneycenterProperty.ID.getName()+"='"+id+"'", null, null, null, null, null);
+		Cursor cursor=bdd.rawQuery("select * from operations where id = ?", new String[]{id});
+		if (cursor.getCount() == 0) return null;
 		for (MoneycenterProperty prop:MoneycenterProperty.values()) {
 			prop.setValue(ope, cursor);
 		}

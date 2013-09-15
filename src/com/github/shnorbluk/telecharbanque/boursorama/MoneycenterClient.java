@@ -15,17 +15,19 @@ public class MoneycenterClient
  private final BoursoramaClient bclient ;
  private final MoneycenterSession session;
  private HClient hclient;
+ private SQLiteMoneycenter db;
  private static String TAG = "MoneycenterClient";
  private final UI gui;
 	private static final String URL_EDIT_OPERATION = "https://www.boursorama.com/ajax/patrimoine/moneycenter/monbudget/operation_edit.phtml";
 	private int nbOfPages;
 	
 
- public MoneycenterClient(HttpClient httpClient, UI gui ) {
+	public MoneycenterClient(HttpClient httpClient, UI gui ,SQLiteMoneycenter db ) {
   this.gui=gui;
 	 bclient= new BoursoramaClient(gui,httpClient);
 	 session = new MoneycenterSession(httpClient, gui);
 	 hclient= new HClient(httpClient, session, gui);
+	 this.db = db;
  }
 
  public HClient getHClient()
@@ -101,9 +103,11 @@ public class MoneycenterClient
  }
  
 public McOperationFromEdit getOperation(String id, boolean online) throws IOException, PatternNotFoundException, ConnectionException, ParseException {
+  McOperationInDb opeFromDb=db.getOperation(id);
   BufferedReader html=getOperationPageAsReader(id, online );
   try {
-   return new McOperationFromEdit(html, id);
+	  McOperationFromEdit opeFromEdit = new McOperationFromEdit(html, id);
+	  return opeFromEdit;
   } catch ( PatternNotFoundException e ) {
    gui.display("La chaine '"+
      e.getPattern()+

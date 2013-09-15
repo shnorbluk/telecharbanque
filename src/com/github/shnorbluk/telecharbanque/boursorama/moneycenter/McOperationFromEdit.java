@@ -55,7 +55,7 @@ public class McOperationFromEdit extends MoneycenterOperation
 	public void setMemo (String operationMemo) {
 		this.memo= operationMemo ;
 	}
-	public String getDate() {
+	public String getDateAsString() {
 		return date;
 	}
 	public void setDate(String date) {
@@ -80,7 +80,7 @@ public class McOperationFromEdit extends MoneycenterOperation
 			"id", getId(),
 			"editOperation[libelle]", getLibelle(),
 			"editOperation[id_account]", getAccount(), 
-			"editOperation[date]", getDate(),
+			"editOperation[date]", getDateAsString(),
 			"editOperation[num_cheque]", getNumCheque(),
 			"editOperation[amount]", Float.toString(getAmount()), 
 			"editOperation[memo]", memo, 
@@ -117,7 +117,6 @@ public class McOperationFromEdit extends MoneycenterOperation
 		return result;
 	}
 	private static String getExtract(String complete, String begin, String end) throws PatternNotFoundException {
-		logd("getExtract(..."+ begin+","+end);
 		int start= complete.indexOf(begin);
 		int finish = complete.indexOf(end, start);
 		if (finish == -1) {

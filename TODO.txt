@@ -10,6 +10,7 @@ OperationChange
 Réparer régressions:
 La catégorie est toujours null
 La date est au format UTC
+Les symboles euro dans les dedcriptions sont remplacés par des points d'interrogation
 
 v0.2:
 ajouter une colonne id clé primaire pour éviter que les opérations soient enregistrées plusieurs fois
@@ -38,3 +39,4 @@ e
 - Réutiliser la même connexion Boursorama si on demande une autre mise à jour des opérations
 - Persister les messages du display
 - Sur changement de l'orientation, réafficher les messages du display
+- Scroller automatiquement jusqu'a la fin a chaque ecriture de message

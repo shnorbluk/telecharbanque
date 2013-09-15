@@ -14,15 +14,26 @@ public class MoneycenterParser {
   boolean isFrac= extract .indexOf("splitOf")>0;
   ope.setChecked(extract .indexOf("checked")!=-1);
   ope.setId( Utils.findGroupAfterPattern( extract ,"", "\\{'id':'(\\d+)'\\}" ));
-  ope.setLibelle( Utils. findGroupAfterPattern( extract , "operation-libelle", "title=\"[^\"]*\">\\w*([^<]*)\\w*<").trim());
+//  String shortLibelle = Utils. findGroupAfterPattern( extract , "operation-libelle", "title=\"[^\"]*\">\\w*([^<]*)\\w*<").trim();
+  final String libellePattern;
+  //if (shortLibelle.endsWith("...")) {
+//	  shortLibelle=shortLibelle.substring(0, shortLibelle.length()-4);
+//	  String longLibelle;
+  //}
+  
   if (!isFrac) {
 	String dateStr=Utils. findGroupAfterPattern( extract , "operation-date\">","([\\d/]*)");
    ope.setDateFromPage(dateStr);
    ope.setAccount( Utils. findGroupAfterPattern( extract , "operation-account\" title=\"","([^\"]*)\"")); 
+	  libellePattern = "title=\"([^\"]*)\">\\w*[^<]*\\w*<";
   } else {
       ope.setDate(prev.getDate());
       ope.setAccount(prev.getAccount());
+	  libellePattern="title=\"[^\"]*\">\\w*([^<]*)\\w*<";
   }
+  String libelle = Utils. findGroupAfterPattern( extract ,"operation-libelle",
+  libellePattern).trim();
+  ope.setLibelle(libelle);
   String category;
   if ( extract .indexOf( "operation-category\"  title=\"" )>0) {
    category =Utils. findGroupAfterPattern( extract , "","operation-category\"  title=\"([^\"]*)\""); 

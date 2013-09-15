@@ -7,12 +7,12 @@ import java.util.*;
 import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.*;
 import android.webkit.*;
 
-public abstract class MoneycenterProperty<T>
+public abstract class MoneycenterProperty<VALUE>
  {
 	 private static final SimpleDateFormat DB_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
  public static final McStringProperty ID=new McStringProperty("id", "NOT NULL PRIMARY KEY"){
 	 @Override
-	 public String getValue(McOperationInDb ope) {
+	 public String getValue(MoneycenterOperation ope) {
 		 return ope.getId();
 	 }
 	 @Override
@@ -21,7 +21,7 @@ public abstract class MoneycenterProperty<T>
 	 }
  };
 	public static final McStringProperty LIBELLE= new McStringProperty("libelle", "NOT NULL") {
-		public String getValue ( McOperationInDb ope) {
+		public String getValue ( MoneycenterOperation ope) {
 			return ope.getLibelle();
 		}
 		@Override
@@ -30,8 +30,9 @@ public abstract class MoneycenterProperty<T>
 		}
  };
 	public static final McStringProperty MEMO= new McStringProperty("memo", "") {
-	 public String getValue ( McOperationInDb ope) {
-		 return ope.getMemo();
+		@Override
+		public String getValue (MoneycenterOperation ope) {
+		 return ((McOperationInDb)ope).getMemo();
 	 }
 	 @Override
 		public void setValue(McOperationInDb ope, String val) {
@@ -43,9 +44,12 @@ public abstract class MoneycenterProperty<T>
 		public void put (ContentValues values, String key, Date value) {
 			values.put(key, DB_DATE_FORMAT.format(value));
 		}
-		public Date getValue ( McOperationInDb ope) {
-		 return ope.getDate();
+		public Date getValue ( MoneycenterOperation ope) {
+		 return ((McOperationInDb)ope).getDate();
 	 }
+		public Date getValueFromList(MoneycenterOperationFromList ope) {
+			return ope.getDate();
+		}
 		public void setValue(McOperationInDb ope, Cursor cursor) {
 			try {
 				ope.setDate(DB_DATE_FORMAT.parse(cursor.getString(ordinal())));
@@ -56,7 +60,7 @@ public abstract class MoneycenterProperty<T>
 		}
  };
 	public static final MoneycenterProperty<Float> AMOUNT= new MoneycenterProperty<Float>("amount", "REAL", "NOT NULL") {
-		public Float getValue ( McOperationInDb ope) {
+		public Float getValue ( MoneycenterOperation ope) {
 		 return ope.getAmount();
 	 }
 	 @Override
@@ -68,7 +72,7 @@ public abstract class MoneycenterProperty<T>
 	 }
  };
  public static final McStringProperty CATEGORY= new McStringProperty("category", ""){
-	 public String getValue ( McOperationInDb ope) {
+	 public String getValue ( MoneycenterOperation ope) {
 		 return ope.getCategory();
 	 }
 	 public void setValue(McOperationInDb ope, String val) {
@@ -76,7 +80,7 @@ public abstract class MoneycenterProperty<T>
 	}
  };
 	public static final McStringProperty CATEGLABEL =new McStringProperty("categoryLabel", "") {
-		public String getValue (McOperationInDb ope) {
+		public String getValue (MoneycenterOperation ope) {
 		 return ope.getCategoryLabel();
 	 }
 		public void setValue(McOperationInDb ope, String val) {
@@ -84,7 +88,7 @@ public abstract class MoneycenterProperty<T>
 	}
  };
 	public static final McStringProperty ACCOUNT= new McStringProperty("account", "NOT NULL"){
-		public String getValue ( McOperationInDb ope) {
+		public String getValue ( MoneycenterOperation ope) {
 		 return ope.getAccount();
 	 }
 		public void setValue(McOperationInDb ope, String val) {
@@ -92,7 +96,7 @@ public abstract class MoneycenterProperty<T>
 	}
  };
 	public static final MoneycenterProperty<Boolean> CHECKED= new MoneycenterProperty<Boolean>("checked", "BOOLEAN", "NOT NULL") {
-		public Boolean getValue ( McOperationInDb ope) {
+		public Boolean getValue ( MoneycenterOperation ope) {
 		 return ope.isChecked();
 	 }
 		public void setValue(McOperationInDb ope, Cursor cursor) {
@@ -104,9 +108,13 @@ public abstract class MoneycenterProperty<T>
 	}
  };
 	public static final McStringProperty PARENT = new McStringProperty("parent", ""){
-		public String getValue ( McOperationInDb ope) {
-		 return ope.getParent();
+		public String getValue ( MoneycenterOperation ope) {
+		 return ((McOperationInDb)ope).getParent();
 	 }
+	 @Override
+		public String getValueFromList(MoneycenterOperationFromList ope) {
+			return ope.getParent();
+		}
 		public void setValue(McOperationInDb ope, String val) {
 		 ope.setParent(val);
 	}
@@ -114,11 +122,13 @@ public abstract class MoneycenterProperty<T>
  private final String name;
  private final String type;
  private final String sqlConstraint;
- private static int ord=0;
+ private int ord;
+ private static int counter=0;
  protected MoneycenterProperty (String name, String type, String sqlConstraint) {
   this.name= name;
   this.type=type;
   this.sqlConstraint = sqlConstraint;
+  ord=counter++;
  }
  protected int ordinal() {
   return ord;
@@ -129,9 +139,15 @@ public abstract class MoneycenterProperty<T>
  public String getSqlType() {
 	 return type+" "+sqlConstraint;
  }
- public abstract T getValue ( McOperationInDb ope) ;
+ public VALUE getValueInDb( McOperationInDb ope) {
+	 return getValue(ope);
+ }
+	protected abstract VALUE getValue ( MoneycenterOperation ope);
  public abstract void setValue(McOperationInDb ope, Cursor cursor);
- public abstract void put(ContentValues values, String name, T value);
+ public abstract void put(ContentValues values, String name, VALUE value);
+	public VALUE getValueFromList (MoneycenterOperationFromList ope) {
+		return getValue(ope);
+	}
  public static MoneycenterProperty[] values() {
 	 return new MoneycenterProperty[] {
 		 ID, LIBELLE, MEMO, DATE, 
@@ -140,5 +156,13 @@ public abstract class MoneycenterProperty<T>
 		 CHECKED, PARENT
 	 };
  }
+	public static MoneycenterProperty[] propertiesInList() {
+		return new MoneycenterProperty[] {
+			ID, LIBELLE, DATE, 
+			AMOUNT, CATEGORY, 
+			CATEGLABEL, ACCOUNT, 
+			CHECKED, PARENT
+		};
+	}
  
 }
