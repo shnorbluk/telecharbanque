@@ -1,10 +1,6 @@
 ﻿v0.1:
-MoneycenterClient.getOperation(MoneycenterOperationFromList ope, boolean forceReload):
-si ope.differs(operationFromDb), reload
-- MoneycenterOperationFromList avec checked et enlever checked de MoneycenterOperation
-- MoneycenterOperationFromEdit avec memo, numcheq, patr, contrat, groupe
 OperationChange
-- méthode McPersistence.uploadChanges qui prend une liste de CheckOperationChange pour être prêt à lire depuis db
+- methde sqlitemc.listChangesToApply
 - méthode qui lit une liste de coc depuis la db et l'applique
 - ajouter une entrée de menu pour mettre à jour depuis la db
 Réparer régressions:
@@ -40,3 +36,4 @@ e
 - Persister les messages du display
 - Sur changement de l'orientation, réafficher les messages du display
 - Scroller automatiquement jusqu'a la fin a chaque ecriture de message
+- Telechargement en arriere-plan meme quand on est sur une autre appli
