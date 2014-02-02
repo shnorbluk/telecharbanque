@@ -3,8 +3,10 @@ package com.github.shnorbluk.telecharbanque.boursorama;
 import android.content.*;
 import android.database.*;
 import android.database.sqlite.*;
-import com.github.shnorbluk.telecharbanque.util.*;
 import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.*;
+import com.github.shnorbluk.telecharbanque.util.*;
+import java.util.*;
+import org.orman.mapper.*;
 
 public class SQLiteMoneycenter extends SQLiteOpenHelper
 {
@@ -17,10 +19,11 @@ public class SQLiteMoneycenter extends SQLiteOpenHelper
 	private static final String COL_SUBCATEGORY = "subcategory";
 	private static final String COL_CATEGORY_LABEL="categoryLabel";
 	private static final String COL_DEBIT="debit";
+	private static final String TABLE_ACCOUNT="account";
 	
 	private SQLiteDatabase bdd=null;
 	public SQLiteMoneycenter(Context context) {
-		super(context, "moneycenter.db", null, 1);
+		super(context, "moneycenter.db", null, 7);
 		
 	}
 	
@@ -77,7 +80,7 @@ public class SQLiteMoneycenter extends SQLiteOpenHelper
 			COL_CATEGORY_LABEL+" TEXT NOT NULL, "+
 			COL_ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
 			COL_DEBIT+" BOOLEAN);");
-		db.execSQL("CREATE TABLE account"+
+		db.execSQL("CREATE TABLE "+ TABLE_ACCOUNT+
 		  "( account STRING PRIMARY KEY, "+
 		  "solde REAL NOT NULL);");
 	}
@@ -89,11 +92,26 @@ public class SQLiteMoneycenter extends SQLiteOpenHelper
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int p2, int p3)
 	{
-		 db.execSQL("DROP TABLE "+TABLE_OPERATIONS+";");
-		 final String QUERY = "DROP TABLE "+TABLE_CATEGORIES+";";
+		 db.execSQL("DROP TABLE IF EXISTS "+TABLE_OPERATIONS+";");
+		 final String QUERY = "DROP TABLE IF EXISTS "+TABLE_CATEGORIES+";";
 		 db.execSQL(QUERY);
+		db.execSQL("DROP TABLE IF EXISTS "+TABLE_ACCOUNT +";");
 		 onCreate(db);
 	}
 	
+//	private static <T> List<T> getObectsFromDb(BdTableDescriptor<T> table, Cursor cursor) {
+/*		final List<T> objs=new ArrayList(cursor.getCount());
+		for (cursor.moveToFirst();!cursor.isAfterLast(); cursor.moveToNext()) {
+			T obj =TABLE_CHANGES.createObject();
+			DbColumn[] cols=TABLE_CHANGES.getColumns();
+			for (int i=0; i< cols.length;i++){
+				DbColumn col=cols[i];
+				col.saveToObject(cursor);
+			}
+		}
+	}*/
+	public List<? extends OperationChange> listChangesToApply() {
+		return Model.fetchAll(CheckOperationChange.class);
+	}
 	
 }

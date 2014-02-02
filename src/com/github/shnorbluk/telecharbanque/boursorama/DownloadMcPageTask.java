@@ -16,23 +16,22 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 	private int nbOfPages;
 	private static final String TAG="DownloadMcPageTask";
 	private static String csvFileName;
-	private final MoneycenterPersistence persistence;
+	private final MoneycenterClient mcClient;
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
 
 	public void setCsvFileName(String csvFile) {
 		this.csvFileName=csvFile;
 	}
-	public DownloadMcPageTask(int numpage, int pageIndex, int nbOfPages, MoneycenterPersistence persistence)
+	public DownloadMcPageTask(int numpage, int pageIndex, int nbOfPages, MoneycenterClient mcClient) throws ConnectionException
 	{
 		this.numpage = numpage;
 		this.pageIndex = pageIndex;
+		this.mcClient = mcClient;
 		this.nbOfPages = nbOfPages;
-		this.persistence = persistence;
 	}
 	
 	@Override
 	protected void onPreExecute () {
-		display("Page "+pageIndex+" sur "+nbOfPages+": Page "+numpage, false);
 	}
 	
 	private static void logd(Object... o) {
@@ -42,7 +41,8 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 	protected String[] doInBackground(String... pages) {
 		try
 		{
-			List<McOperationInDb> operationList = persistence.parseListPage (Configuration.isReloadListPages(), this, numpage);
+			display("Page " + pageIndex + " sur " + nbOfPages + ": Page " + numpage, false);
+			List<McOperationInDb> operationList = mcClient.parseListPage (Configuration.isReloadListPages(), this, numpage);
 			String text="";
 			logd("Nombre d'opérations à exporter:",operationList.size());
 			for ( McOperationInDb operation : operationList) {
@@ -54,6 +54,13 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 			}
 			String csv="";
 			for ( McOperationInDb op: operationList) {
+				if (!op.isSaved()) {
+					logd("insert ", op);
+					op.insert();
+				} else if (!op.isUpToDate()){
+					op.update();
+				}
+				
 				String memo=op.getMemo();
 				boolean checked =op.isChecked ();
 				String date =DATE_FORMAT.format(op.getDate ());

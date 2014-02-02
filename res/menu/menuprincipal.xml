@@ -4,4 +4,5 @@
 <item android:id="@+id/itemOptions" android:title="Options"></item>
 	<item android:id="@+id/itemPointage" android:title="Pointage"></item>
 	<item android:id="@+id/itemPrincipal" android:title="Principal"/>
+	<item android:id="@+id/itemOperations" android:title="Operations"/>
   </menu>

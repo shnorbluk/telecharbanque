@@ -6,7 +6,7 @@ import com.github.shnorbluk.telecharbanque.util.*;
 import java.io.*;
 import java.text.*;
 
-public class McOperationFromEdit extends MoneycenterOperation
+public class McOperationFromEdit implements MoneycenterOperation
 {
 	private String contract;
 	private String typecontract;
@@ -17,6 +17,86 @@ public class McOperationFromEdit extends MoneycenterOperation
 	private String dataPatrimoine;
 	private String memo ;
 	private String date;
+	private String numCheque;
+	private String id;
+	private String libelle;
+	private String account;
+
+	private float amount ;
+	private String categ;
+	private String subcateg;
+
+	private String categoryLabel;
+
+	public void setCategoryLabel(String categoryLabel)
+	{
+		this.categoryLabel = categoryLabel;
+	}
+
+	public String getCategoryLabel()
+	{
+		return categoryLabel;
+	}
+
+	public void setSubCategory(String subcateg)
+	{
+		this.subcateg = subcateg;
+	}
+
+	public String getSubCategory()
+	{
+		return subcateg;
+	}
+
+	public void setCategory(String categ)
+	{
+		this.categ = categ;
+	}
+
+	public String getCategory()
+	{
+		return categ;
+	}
+
+	public void setAmount(float amount)
+	{
+		this.amount = amount;
+	}
+
+	public float getAmount()
+	{
+		return amount;
+	}
+
+	public void setAccount(String account)
+	{
+		this.account = account;
+	}
+
+	public String getAccount()
+	{
+		return account;
+	}
+
+	public void setLibelle(String libelle)
+	{
+		this.libelle = libelle;
+	}
+
+	public String getLibelle()
+	{
+		return libelle;
+	}
+
+	public void setId(String id)
+	{
+		this.id = id;
+	}
+
+	public String getId()
+	{
+		return id;
+	}
 	public McOperationFromEdit (BufferedReader html, String id) throws PatternNotFoundException, IOException, ParseException {
 		super();
 		setId(id);
@@ -60,6 +140,12 @@ public class McOperationFromEdit extends MoneycenterOperation
 	}
 	public void setDate(String date) {
 		this.date=date;
+	}
+	public String getNumCheque () {
+		return numCheque;
+	}
+	public void setNumCheque(String numCheque) {
+		this.numCheque=numCheque;
 	}
 	public String[] getAsParams (){
 		String type=getAmount()>0?"credit":"debit";

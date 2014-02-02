@@ -1,7 +1,7 @@
 package com.github.shnorbluk.telecharbanque.boursorama;
-import android.os.*;
 import android.util.*;
 import com.github.shnorbluk.telecharbanque.*;
+import com.github.shnorbluk.telecharbanque.net.*;
 import com.github.shnorbluk.telecharbanque.util.*;
 import java.text.*;
 import java.util.*;
@@ -15,8 +15,15 @@ public class DownloadMoneyCenterTask
  static final String today=new SimpleDateFormat("d-M-yyyy").format(new Date());
 	
  
- public DownloadMoneyCenterTask ( HttpClient httpClient, SQLiteMoneycenter db) {
-	 this. persistence = new MoneycenterPersistence(httpClient, this, db);
+	public DownloadMoneyCenterTask ( HttpClient httpClient, Token token ) {
+		final BufferedHttpClient nhClient = new BufferedHttpClient(this, httpClient);
+		final BoursoramaClient bClient = new BoursoramaClient(nhClient, this, token);
+		SessionedBufferedHttpClient<BoursoramaClient> bhClient= new SessionedBufferedHttpClient<BoursoramaClient>(nhClient, bClient);
+		final MoneycenterSession mcSession = new MoneycenterSession(bhClient, this);
+		SessionedBufferedHttpClient<MoneycenterSession> mhClient = new SessionedBufferedHttpClient<MoneycenterSession>(bhClient, mcSession);
+		MoneycenterClient mcClient= new MoneycenterClient(mhClient, this);
+	 	this. persistence = new MoneycenterPersistence(mcClient, this);
+		//this.persistence = mcPersistence;
  }
 
    /** The system calls this to perform work in a worker thread and
@@ -32,7 +39,7 @@ public class DownloadMoneyCenterTask
 
    persistence.downloadToPersistence(
      saveAllMcHistory, firstPage, lastPage, reloadListPages, saveUnchecked) ;
-   //persistence.exportToCsv(list); 
+  // persistence.exportToCsv(list); 
   } catch (Exception e) {
    display(e.toString(), true);
    Log.e(TAG, "Erreur", e);

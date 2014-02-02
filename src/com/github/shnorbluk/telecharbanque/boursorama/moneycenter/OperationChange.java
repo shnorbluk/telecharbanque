@@ -4,11 +4,12 @@ import com.github.shnorbluk.telecharbanque.boursorama.*;
 import com.github.shnorbluk.telecharbanque.net.*;
 import java.io.*;
 
-public abstract class OperationChange
+public interface OperationChange
 {
-	protected String id;
-	protected OperationChange(String id) {
-		this.id=id;
-	}
+
+	public void performFromFile(MoneycenterPersistence persistence)throws IOException, ConnectionException;
+
 	public abstract void perform(MoneycenterPersistence persistence) throws ConnectionException, IOException;
+	public String getId();
+	public void setId(String id);
 }

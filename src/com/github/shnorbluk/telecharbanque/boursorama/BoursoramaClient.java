@@ -11,26 +11,33 @@ import org.apache.http.client.*;
 public class BoursoramaClient implements SessionManager
 {
  
- private final UI gui;
+ private final UI currentTask;
  private static final String TAG = "BoursoramaClient";
 	
-	private HClient hclient;
-	private boolean simu =true;
+	private BufferedHttpClient hClient;
+	private Token token;
+//	private boolean simu =true;
 	
-	BoursoramaClient ( final UI gui, final HttpClient httpClient) {
+	public BoursoramaClient ( final BufferedHttpClient hClient, UI currentTask, Token token) {
   super();
-     this.gui=gui;
-	 hclient = new HClient(httpClient, null, gui);
+     this.currentTask=currentTask;
+	 this.hClient = hClient;
+	 this.token=token;
+//	 hclient = new HClient(httpClient, null, currentTask, bToken);
  }
 
  public int getSessionInformation() {
 	 return -1;
  }
+ 	public boolean isConnected() {
+		return token.isConnected();
+	}
  
- void setSimulationMode ( boolean simuMode) {
-  hclient = new FakeHClient(gui);
-  simu = true;
- }
+ //void setSimulationMode ( boolean simuMode) {
+  //hclient = new FakeHClient(currentTask);
+  //hClient.setSimulationMode(simuMode);
+  //simu = true;
+ //}
 
 	private static final int DIGIT_WIDTH=100;
 	private static final int DIGIT_HEIGHT=60;
@@ -42,7 +49,7 @@ public class BoursoramaClient implements SessionManager
 	 int[] keybPixels=new int[DIGIT_WIDTH*DIGIT_HEIGHT];
 	 for (int yKeyb=0; yKeyb<=3*DIGIT_HEIGHT; yKeyb += DIGIT_HEIGHT) {
    for(int xKeyb=0; xKeyb<=2*DIGIT_WIDTH; xKeyb+=DIGIT_WIDTH){
-    gui.display("Décodage du chiffre à la position "+ xKeyb+","+yKeyb,false);
+    currentTask.display("Décodage du chiffre à la position "+ xKeyb+","+yKeyb,false);
     Log.i(TAG, xKeyb+","+yKeyb);
     mBitmapKeyboard.getPixels(keybPixels, 0, DIGIT_WIDTH, xKeyb, yKeyb,DIGIT_WIDTH, DIGIT_HEIGHT);
     int minDiff=Integer.MAX_VALUE;
@@ -84,18 +91,17 @@ public class BoursoramaClient implements SessionManager
    if (password == null) {
    	throw new Exception("Le mot de passe n'a pas ete saisi.");
    }
-   gui.display("Connexion à Boursorama  en cours",true);
+   currentTask.display("Connexion à Boursorama  en cours",true);
    //if (simu) return;
-		  StringBuffer connectionPage=hclient.loadString("https://www.boursorama.com/connexion.phtml?", null, online, "");
+		  StringBuffer connectionPage=hClient.loadString("https://www.boursorama.com/connexion.phtml?", null, true, "");
 		  String connectionPageStr=connectionPage.toString();
 		  String imgUrl=Utils.findGroupAfterPattern(connectionPageStr, "<img id=\"login-pad_pad", "src=\"([^\"]*)");
 		  imgUrl="https://www.boursorama.com"+imgUrl;
 		  String filePath= MoneycenterPersistence.TEMP_DIR+"/boursopad.gif";
 		  if (online){
-			  hclient.httpget( imgUrl).save( filePath );
+			  hClient.httpget( imgUrl).save( filePath );
 		  }
 		  String[] coordMap= decodePad (filePath);
-		  logd("coordMap=",coordMap);
 		  String[] parts = connectionPageStr.split ("<area shape");
 		  HashMap<String,String> codeMap=new HashMap<String,String>(12);
 		  for(int i=1; i<parts.length; i++){
@@ -120,11 +126,12 @@ public class BoursoramaClient implements SessionManager
 			  "is_first", "0"
 		  }; 
 		  String uri="https://www.boursorama.com/logunique.phtml";
-		  StringBuffer page = hclient.loadString(uri, params, online,"");
+		  StringBuffer page = hClient.loadString(uri, params, true, "");
 	      if (page.indexOf("Identifiant ou mot de passe incorrect")>0) {
 		   throw new Exception("Identifiant ou mot de passe incorrect");
       	 }
-		  gui.display("Connecté", true);
+		 token.setConnected(true);
+		  currentTask.display("Connecté", true);
 	  
  }
  

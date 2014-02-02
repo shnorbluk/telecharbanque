@@ -8,38 +8,86 @@ import com.github.shnorbluk.telecharbanque.util.*;
 import java.io.*;
 import java.text.*;
 import java.util.*;
-import org.apache.http.client.*;
+import org.orman.mapper.*;
 
 public class MoneycenterClient
 {
- private final BoursoramaClient bclient ;
- private final MoneycenterSession session;
- private HClient hclient;
- private SQLiteMoneycenter db;
+//	private final BoursoramaClient bClient;
+ private SessionedBufferedHttpClient hclient;
  private static String TAG = "MoneycenterClient";
  private final UI gui;
 	private static final String URL_EDIT_OPERATION = "https://www.boursorama.com/ajax/patrimoine/moneycenter/monbudget/operation_edit.phtml";
-	private int nbOfPages;
-	
 
-	public MoneycenterClient(HttpClient httpClient, UI gui ,SQLiteMoneycenter db ) {
+	public MoneycenterClient(SessionedBufferedHttpClient<MoneycenterSession> mhClient, UI gui) {
   this.gui=gui;
-	 bclient= new BoursoramaClient(gui,httpClient);
-	 session = new MoneycenterSession(httpClient, gui);
-	 hclient= new HClient(httpClient, session, gui);
-	 this.db = db;
+  		this.hclient=mhClient;
+	//final MoneycenterSession session = new MoneycenterSession(httpClient, gui);
+//	 hclient= new HClient(httpClient, session, gui, bToken);
+//	 bClient = new BoursoramaClient(httpClient,gui
  }
 
- public HClient getHClient()
- {
-	 return hclient;
- }
+ 	public int getNbOfPages() throws ConnectionException {
+		return hclient.getSessionInformation();
+	}
+ //public HClient getHClient()
+ //{
+	// return hclient;
+ //}
 
- void setSimulationMode ( boolean simuMode) {
-  bclient. setSimulationMode( simuMode);
-  hclient=new FakeHClient(gui);
- }
+ //void setSimulationMode ( boolean simuMode) {
+  //bClient. setSimulationMode( simuMode);
+  //hclient=new FakeHClient(gui);
+ //}
+	public List<McOperationInDb> parseListPage(boolean reloadListPage, UI gui, int numpage) throws PatternNotFoundException, IOException, ConnectionException, ParseException {
+		logd("parseListPage(",reloadListPage, numpage);
+		BufferedReader html = hclient.getReaderFromUrl( "https://www.boursorama.com/patrimoine/moneycenter/monbudget/operations.phtml?page=" + numpage, null, reloadListPage, "</tbody>");
+		String extract=Utils.getExtract(html, "liste-operations-page", "</tbody>");
+		List<McOperationInDb> list = new ArrayList<McOperationInDb>(42);
+		String[] opes=extract.split("<tr");
+        MoneycenterOperationFromList previousOpe=null;
+		for (int partnum=1; partnum<opes.length; partnum++) {
+			gui.display("Opération "+ partnum+" sur "+ (opes.length-1)+" de la page "+numpage, false);
+			String extr=opes[partnum];
+			if ( extr .indexOf("class=\"createRule\"")>0) {
+				logd("Proposition de catégorie");
+				continue;
+			}
+			MoneycenterOperationFromList opeFromList = MoneycenterParser. getOperationFromListExtract( extr, previousOpe);
+            previousOpe=opeFromList;
+			String id = opeFromList.getId();
+			logd("Récupération de l'opération ", id);
 
+			//McOperationInDb opeFromDb = db.getOperation(id);
+			final McOperationInDb opeFromDb = Model.fetchSingle(
+				ModelQuery.select()
+				.from(McOperationInDb.class)
+				.where( C.eq(McOperationInDb.class, "id", id))
+				.getQuery(), McOperationInDb.class);
+			logd("Operation trouvee en base:",opeFromDb);
+			final McOperationInDb opeForDb;
+			if (opeFromDb == null) {
+				opeForDb = new McOperationInDb();
+			} else {
+				opeForDb = opeFromDb;
+				opeForDb.setUpToDate(!opeFromList.equals(opeFromDb));
+			}
+			McOperationFromEdit opFromEdit=this.getOperation(id, Configuration.isReloadOperationPages());
+			opeForDb.setSaved(opeFromDb != null);
+			opeForDb.setChecked(opeFromList.isChecked());
+			opeForDb.setParent( opeFromList.getParent());
+			opeForDb.setAccount(opeFromList.getAccount());
+			opeForDb.setCategoryLabel(opeFromList.getCategoryLabel());
+			opeForDb.setLibelle(opFromEdit.getLibelle());
+			opeForDb.setId(id);
+			opeForDb.setAmount(opeFromList.getAmount());
+			opeForDb.setDate(opeFromList.getDate());
+			opeForDb.setMemo(opFromEdit.getMemo());
+			opeForDb.setNumCheque(opFromEdit.getNumCheque());
+			logd("Enregistrement de l'opération "+opeForDb.getId()+" dans la base de données");
+			list.add(opeForDb);
+		}
+		return list;
+	}
  void pointeOperation(String id, boolean pointed) throws IOException, ConnectionException {
   hclient .loadString( 
     "https://www.boursorama.com/ajax/patrimoine/moneycenter/monbudget/operations_check.phtml" ,
@@ -103,7 +151,6 @@ public class MoneycenterClient
  }
  
 public McOperationFromEdit getOperation(String id, boolean online) throws IOException, PatternNotFoundException, ConnectionException, ParseException {
-  McOperationInDb opeFromDb=db.getOperation(id);
   BufferedReader html=getOperationPageAsReader(id, online );
   try {
 	  McOperationFromEdit opeFromEdit = new McOperationFromEdit(html, id);

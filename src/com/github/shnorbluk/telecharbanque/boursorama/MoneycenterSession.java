@@ -10,13 +10,18 @@ import org.apache.http.client.*;
 
 public class MoneycenterSession implements SessionManager
 {
- private final HClient hclient;
+ private final SessionedBufferedHttpClient hclient;
  private int nbOfPages = -1;
  private static final String TAG="MoneycenterSession";
  private static final String TODAY=new SimpleDateFormat("d-M-yyyy").format(new Date());
+ private boolean connected = false;
  
-	public MoneycenterSession(HttpClient httpClient, UI gui ) {
-		hclient = new HClient ( httpClient, new BoursoramaClient(gui,httpClient), gui);
+	public MoneycenterSession(SessionedBufferedHttpClient<BoursoramaClient> bhClient, UI gui ) {
+		hclient = bhClient;
+	}
+	
+	public boolean isConnected() {
+		return connected;
 	}
 
  public int getSessionInformation () {
@@ -30,6 +35,7 @@ public class MoneycenterSession implements SessionManager
    "filters%5BfromDate%5D=27-10-2006&"+
    "filters%5BtoDate%5D="+TODAY,
 		 null, true,"");
+		 connected=true;
   Log.d( TAG , "Categories");
   HashMap<String,String> categories = new HashMap< String,String >(); 
   String regex="\\{'type':'([^']+)','category':'([^']+)'\\}\">([^<]*)</a><b" ;

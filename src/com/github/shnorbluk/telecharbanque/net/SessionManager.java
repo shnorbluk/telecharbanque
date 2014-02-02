@@ -6,6 +6,8 @@ public interface SessionManager
 {
  void connect() throws Exception ;
  int getSessionInformation();
+	boolean isConnected();
+//	void setConnected(boolean connected);
 }
 
 

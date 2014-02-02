@@ -4,12 +4,15 @@ import com.github.shnorbluk.telecharbanque.*;
 import com.github.shnorbluk.telecharbanque.util.*;
 import java.io.*;
 
-public class FakeHClient extends HClient
+public class OfflineHttpClient extends BufferedHttpClient
 {
  private static final String TAG = "FakeHClient";
+ private final UI currentTask;
 
- public FakeHClient (UI gui) {
-  super(null,null, gui);
+ private OfflineHttpClient (BufferedHttpClient hClient, UI gui) {
+	 super( gui, null);
+	 currentTask=gui;
+  
  }
 
  private static void logd(Object o) {
@@ -31,9 +34,9 @@ public class FakeHClient extends HClient
  protected StringBuffer loadStringFromNet(String url, String[] params, String filename, String patternToCheck) throws IllegalStateException {
 	 logd(url+params);
    if (params == null) {
-    gui.display("Simulation get "+url,true);
+	   currentTask.display("Simulation get "+url,true);
    } else {
-    gui.display("Simulation post "+url+" ", true);
+	   currentTask.display("Simulation post "+url+" ", true);
    }
   return new StringBuffer (patternToCheck);
  }

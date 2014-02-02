@@ -1,14 +1,15 @@
 package com.github.shnorbluk.telecharbanque.boursorama;
 import android.util.*;
 import com.github.shnorbluk.telecharbanque.*;
+import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.*;
 import com.github.shnorbluk.telecharbanque.net.*;
 import com.github.shnorbluk.telecharbanque.util.*;
 import java.io.*;
+import java.text.*;
 import java.util.*;
 import java.util.concurrent.*;
 import org.apache.http.client.*;
-import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.*;
-import java.text.*;
+import org.orman.mapper.*;
 
 public class MoneycenterPersistence
 {
@@ -16,21 +17,20 @@ public class MoneycenterPersistence
  public static final String PERSISTENCE_FILE = TEMP_DIR+"/moneycenter.txt";
 	
  private static final String TAG = "MoneycenterPersistence";
- private final MoneycenterClient client;
+ private final MoneycenterClient mcClient;
  private final UI gui;
- private final HClient hclient;
-	private final SQLiteMoneycenter db;
+ //private final HClient hClient;
 
-	public MoneycenterPersistence( HttpClient httpClient, UI gui, final SQLiteMoneycenter db) {
-  this. client= new MoneycenterClient(httpClient, gui, db);
-  hclient=client.getHClient();
+	public MoneycenterPersistence( MoneycenterClient mcClient, UI gui) {
+  //this. mcClient= new MoneycenterClient(httpClient, gui, db);
+  this.mcClient = mcClient;
+  //hclient=client.getHClient();
   this.gui=gui;
-  this.db=db;
  }
 
- public void setSimulationMode() {
-	 client.setSimulationMode(true);
- }
+ //public void setSimulationMode() {
+	// mcClient.setSimulationMode(true);
+ //}
 
  void exportToCsv ( List<McOperationInDb> operations ) throws IOException {
   String csv="";
@@ -65,7 +65,7 @@ public class MoneycenterPersistence
  
 	private void uploadChanges(List<? extends OperationChange> changes)throws ConnectionException, IOException {
 	 for(final OperationChange change:changes) {
-		 change.perform(this);
+		 change.performFromFile(this);
 	 }
  }
  void uploadOperations( String[] props) throws MalformedTextException, UnexpectedResponseException, IOException, ConnectionException, PatternNotFoundException, ParseException {
@@ -74,7 +74,11 @@ public class MoneycenterPersistence
   for (String modif:props){
    
    if(modif.startsWith("#") || !modif.contains(".tosync=")) {
-   // logd("On ignore la ligne "+modif);
+	   if(modif.contains("tosync"))
+		   logd("On ignore la ligne ",
+		   modif,
+		   modif.contains(".tosync="),
+		   modif.startsWith("#"));
     continue;
    }
 	  Log.d(TAG,modif);
@@ -99,8 +103,8 @@ public class MoneycenterPersistence
     boolean checked=Boolean.valueOf(value);
     doActions (pendingOperations);
     gui.display("Pointage de l'opération "+id+":"+checked, false);
-	final CheckOperationChange changeToDo = new CheckOperationChange(id, checked, null);
-	final List<? extends OperationChange> changesToDo=Arrays.asList(changeToDo);
+	final CheckOperationChange changeToDo = new CheckOperationChange(id, checked);
+	final List<CheckOperationChange> changesToDo=Arrays.asList(changeToDo);
 	uploadChanges(changesToDo);
    } else {
     Log.e(TAG, "Propriété "+action+" inconnue.");
@@ -110,55 +114,15 @@ public class MoneycenterPersistence
   doActions (pendingOperations);
   gui.display("Modifications effectuées avec succès", true);
  }
-	public List<McOperationInDb> parseListPage(boolean reloadListPage, UI gui, int numpage) throws PatternNotFoundException, IOException, ConnectionException, ParseException {
-		db.open();
-		BufferedReader html = client.getHClient().getReaderFromUrl( "https://www.boursorama.com/patrimoine/moneycenter/monbudget/operations.phtml?page=" + numpage, null, reloadListPage, "</tbody>");
-		String extract=Utils.getExtract(html, "liste-operations-page", "</tbody>");
-		List<McOperationInDb> list = new ArrayList<McOperationInDb>(42);
-		String[] opes=extract.split("<tr");
-        MoneycenterOperationFromList previousOpe=null;
-		for (int partnum=1; partnum<opes.length; partnum++) {
-			gui.display("Opération "+ partnum+" sur "+ (opes.length-1)+" de la page "+numpage, false);
-			String extr=opes[partnum];
-			if ( extr .indexOf("class=\"createRule\"")>0) {
-				logd("Proposition de catégorie");
-				continue;
-			}
-			MoneycenterOperationFromList opeFromList = MoneycenterParser. getOperationFromListExtract( extr, previousOpe);
-            previousOpe=opeFromList;
-			String id = opeFromList.getId();
-			logd("Récupération de l'opération ", id);
 
-			McOperationInDb opeFromDb = db.getOperation(id);
-			logd("Operation trouvee en base:",opeFromDb);
-			if (opeFromDb == null || !opeFromList.equals(opeFromDb)) {
-			McOperationFromEdit opFromEdit=client.getOperation(id, Configuration.isReloadOperationPages());
-				McOperationInDb opeForDb = new McOperationInDb();
-			opeForDb.setChecked(opeFromList.isChecked());
-			opeForDb.setParent( opeFromList.getParent());
-			opeForDb.setAccount(opeFromList.getAccount());
-			opeForDb.setCategoryLabel(opeFromList.getCategoryLabel());
-			opeForDb.setLibelle(opFromEdit.getLibelle());
-			opeForDb.setId(id);
-			opeForDb.setAmount(opeFromList.getAmount());
-			opeForDb.setDate(opeFromList.getDate());
-			opeForDb.setMemo(opFromEdit.getMemo());
-			opeForDb.setNumCheque(opeFromList.getNumCheque());
-			logd("Enregistrement de l'opération "+opeForDb.getId()+" dans la base de données");
-			db.setOperation(opeForDb);
-				opeFromDb = opeForDb;
-			}
-			list.add(opeFromDb);
-		}
-		return list;
-	}
-	
  void downloadToPersistence ( boolean saveAllMcHistory, int firstPage,
-   int lastPage, boolean reloadListPages,
+   int lastPage,
+   boolean reloadListPages,
    boolean saveUnchecked ) throws ConnectionException, ExecutionException, InterruptedException, IOException {
+	   logd("downloadToPersistence("+saveAllMcHistory+firstPage+","+lastPage+reloadListPages+saveUnchecked);
 	if (saveAllMcHistory) {
    		firstPage=1;
-   		lastPage= hclient.getSessionInformation();
+   		lastPage= mcClient.getNbOfPages();
   	} 
   Log.d( TAG, "Pages "+firstPage+" à "+ lastPage+" reloadListPages="+ reloadListPages);
   int nbOfPages=lastPage-firstPage+1;
@@ -167,7 +131,7 @@ public class MoneycenterPersistence
   Utils.writeToFile("",PERSISTENCE_FILE,false);
   Utils.writeToFile("",csvFile,false);
   for (int numpage= firstPage; numpage<=lastPage; numpage++ ) {
-   DownloadMcPageTask task = new DownloadMcPageTask(numpage, pageIndex++, nbOfPages, this);
+   DownloadMcPageTask task = new DownloadMcPageTask(numpage, pageIndex++, nbOfPages, mcClient);
    task.setCsvFileName(csvFile);
    task.execute("");
    if (task.get() == null) {
@@ -201,7 +165,7 @@ public class MoneycenterPersistence
   Map.Entry<String,List<String[]>> entry= it.next();
   String id=entry.getKey();
   List<String[]> propList = entry.getValue();
-  McOperationFromEdit operation = client.getOperation(id, false);
+  McOperationFromEdit operation = mcClient.getOperation(id, false);
   for ( String[] property : propList ) {
    String action= property[0];
    String value =property[1];
@@ -214,7 +178,7 @@ public class MoneycenterPersistence
   }
   String[] params= operation .getAsParams();  
   Log.i(TAG, "Paramètres à poster:'"+Utils.toString( params)+"'");
-  client.postOperation ( operation );
+  mcClient.postOperation ( operation );
   declarePropertiesAsSynced (id, propList);
   it.remove();
  }
@@ -233,23 +197,21 @@ public class MoneycenterPersistence
   declareLinesAsSynced (p);
  }
 
- private void declareLinesAsSynced ( List<String> p ) throws IOException {
-	 logd("declareLinesAsSynced(",p);
-  StringBuffer content = Utils.readFile(PERSISTENCE_FILE,"iso-8859-1");
-  String contentStr=content.toString();
-  for (String property:p) {
-	  String find=property +".tosync";
-	  String replace=property +".synced";
-	  logd("Remplacement de "+find+" par "+replace);
-	  logd(find+" trouvé à la position "+contentStr.indexOf(find));
-   contentStr=contentStr.replace( find, replace );
-   }
-  Utils.writeToFile( contentStr, PERSISTENCE_FILE, false );
- }
+	public void declareLinesAsSynced ( List<String> p ) throws IOException {
+		logd("declareLinesAsSynced(",p);
+		StringBuffer content = Utils.readFile(PERSISTENCE_FILE,"iso-8859-1");
+		String contentStr=content.toString();
+		for (String property:p) {
+			String find=property +".tosync";
+			String replace=property +".synced";
+			logd("Remplacement de "+find+" par "+replace);
+			logd(find+" trouvé à la position "+contentStr.indexOf(find));
+			contentStr=contentStr.replace( find, replace );
+		}
+		Utils.writeToFile( contentStr, PERSISTENCE_FILE, false );
+	}
 
  public void pointeOperation(String id, boolean pointed) throws ConnectionException, IOException {
-  client. pointeOperation(id, pointed);
-  logd("apres pointeOperation");
-  declareLinesAsSynced (Arrays.<String>asList(id+".checked"));
+  mcClient.pointeOperation(id, pointed);
  }
 }

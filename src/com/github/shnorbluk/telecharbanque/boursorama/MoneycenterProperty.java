@@ -97,6 +97,11 @@ public abstract class MoneycenterProperty<VALUE>
  };
 	public static final MoneycenterProperty<Boolean> CHECKED= new MoneycenterProperty<Boolean>("checked", "BOOLEAN", "NOT NULL") {
 		public Boolean getValue ( MoneycenterOperation ope) {
+
+			return ((IMcOperationFromList)ope) .isChecked();
+	 }
+	 @Override
+	 public Boolean getValueFromList(McOperationInDb ope) {
 		 return ope.isChecked();
 	 }
 		public void setValue(McOperationInDb ope, Cursor cursor) {
