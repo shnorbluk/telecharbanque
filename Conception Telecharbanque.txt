@@ -1,0 +1,23 @@
+WebInformation<DATA,DEPENDS extends WebInfo>
+-requestInfos(WebClient,DEPENDS)
++infosNeeded List<Class<? extends WebInfo>>
++validityPeriod Duration
++onlyOnDemand boolean
+-onInfoObtained(DATA)
+-onRequestFailed(Exception)
+-onRetriableError(String message)
+-onProgress(String message)
+-requestUpdate(WebClient)
+-onUpdateSuccess()
+-onUpdateFailed(Exception)
+-onUpdateProgress()
+-getDisplayableValue() String
++updatableWith Class<? extends WebInfos>
++enrichOnDemand boolean
+-requestEnrich()
+
+WebInfoList<DATA,DEPENDS extends WebInfo<List<DATA>,DEPENDS>
+-requestNextPage(WebClient,DEPENDS)
+-onPageSuccess(List<Data>)
+-getCompleteList() List<DATA>
++obsolenscencePolicy DELETE/UPDATE/IGNORE
