@@ -32,7 +32,6 @@ public class MainActivity extends Activity
 	private static TextView displayer= null;
 	private final DefaultHttpClient httpClient = new DefaultHttpClient();
 //	private final BoursoramaClient bClient = new BoursoramaClient(httpClient,gui);
-	private final SQLiteMoneycenter db = new SQLiteMoneycenter(this);
 	private DownloadMoneyCenterTask downTask = null;
 	private final Token token = new Token(false); 
 	private Database odb;
@@ -106,7 +105,8 @@ public class MainActivity extends Activity
 	@Override
 	public void onStop() {
 		super.onStop();
-		odb.closeConnection();
+	//	odb.closeConnection();
+	logd("onStop");
 	}
 	private void displayMainScreen() 
 	{
@@ -181,7 +181,7 @@ public class MainActivity extends Activity
 	}
 	private void displayOperationListHtml()
 	{
-		
+		logd("Debut de displayOplist "+System.currentTimeMillis());
 		setContentView(R.layout.list_operations);
 		final WebView webView = (WebView) findViewById(R.id.webView1);
 		final List<String> numbers = Arrays.asList(new String[] {
@@ -195,22 +195,24 @@ public class MainActivity extends Activity
 		ope.setLibelle("Opération bidon");
 		ope.setCategoryLabel("categ");
 		ope.setMemo("Bla bla bla");
+		logd("Début de la requete "+System.currentTimeMillis());
 		long start=System.currentTimeMillis();
 		final List<McOperationInDb> opList = Model.fetchQuery(
 			ModelQuery.select()
 			.from(McOperationInDb.class)
 			.orderBy("-McOperationInDb.date")
-			.limit(100)
+			.limit(150)
 			.getQuery(),
 			McOperationInDb.class);
 		int duration = (int)(System.currentTimeMillis()-start);
-		final List<McOperationInDb> operations = opList.subList(0, 90);
+		final List<McOperationInDb> operations = opList.subList(0, 140);
+		logd("Début de la concnténation html "+System.currentTimeMillis());
 		String customHtml = 
 			"<html><head><script type='text/javascript'>" +
 			"function addRow(operation){" +
 			"var table = document.getElementById('table');" +
 			"var row = table.insertRow(table.rows.length);" +
-			"var props= ['date','amount'];" +
+			"var props= ['date','amount','libelle','categ','memo'];" +
 			"for (var i=0; i<props.length; i++) {" +
 			"var cell1 = row.insertCell(i);" +
 			"cell1.innerHTML = operation[props[i]];" +
@@ -237,7 +239,7 @@ public class MainActivity extends Activity
 		customHtml +=
 			"</table></body></html>";
 		webView.getSettings().setJavaScriptEnabled(true);
-		logd(System.currentTimeMillis());
+		logd("Début d'affichage du webview "+System.currentTimeMillis());
 		webView.loadData(customHtml, "text/html", "UTF-8");
 		final String url = "javascript:addRow({date:'"
 			+DateFormat.getDateInstance(DateFormat.SHORT).format(ope.getDate())
@@ -247,14 +249,15 @@ public class MainActivity extends Activity
 			+"',memo:'"+ope.getMemo()
 			+"'});";
 		
-		try
-		{
-			Thread.sleep(20000);
-		}
-		catch (InterruptedException e)
-		{}
+	//	try
+	//	{
+	//		Thread.sleep(20000);
+	//	}
+	//	catch (InterruptedException e)
+	//	{}
 		webView.loadUrl(url);
 		logd(url);
+		logd("Fin de displayListOperationsHtml "+System.currentTimeMillis());
 	}
 	private void displayOperationListGrid()
 	{
