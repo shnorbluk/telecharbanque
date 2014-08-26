@@ -12,14 +12,14 @@ public class UpdateOperationsTask extends AsynchTask<String>
  private MoneycenterPersistence persistence;
 	protected static String TAG="UpdateOperationsTask";
 
- public UpdateOperationsTask( HttpClient httpClient, Token token) {
-	 final BufferedHttpClient hClient = new BufferedHttpClient(this, httpClient);
-	 final BoursoramaClient bClient = new BoursoramaClient(hClient, this, token);
-	 final SessionedBufferedHttpClient<BoursoramaClient> bhClient = new SessionedBufferedHttpClient<BoursoramaClient>(hClient, bClient);
-	 final MoneycenterSession mcSession = new MoneycenterSession(bhClient, this);
-	 final SessionedBufferedHttpClient<MoneycenterSession> mchClient = new SessionedBufferedHttpClient<MoneycenterSession>(bhClient, mcSession);
-	 final MoneycenterClient mcClient = new MoneycenterClient(mchClient, this);
-	 this. persistence = new MoneycenterPersistence (mcClient, this);
+ public UpdateOperationsTask( HttpClient httpClient, Token boursoramaToken) {
+	 final BufferedHttpClient bufferedHttpClient = new BufferedHttpClient(this, httpClient);
+	 final BoursoramaClient bClient = new BoursoramaClient(bufferedHttpClient, this, boursoramaToken);
+	 
+//	 final MoneycenterSession mcSession = new MoneycenterSession(bhClient, this);
+//	 final BoursoramaClient mchClient = new BoursoramaClient(bufferedHttpClient, bClient);
+	 final MoneycenterClient mcClient = new MoneycenterClient(httpClient, this, boursoramaToken);
+	 this. persistence = new MoneycenterPersistence (mcClient);
   //if (Configuration.isSimuMode()) {
   // persistence.setSimulationMode();
  // }

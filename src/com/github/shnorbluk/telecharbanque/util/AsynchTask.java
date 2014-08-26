@@ -2,10 +2,16 @@ package com.github.shnorbluk.telecharbanque.util;
 
 import android.os.*;
 import com.github.shnorbluk.telecharbanque.*;
+import org.apache.http.client.*;
 
 public abstract class AsynchTask<Return> extends AsyncTask<String, String, Return> implements UI
 {
  protected String TAG;
+ //	private final HttpClient httpClient;
+	
+	protected AsynchTask () {
+//		this.httpClient = httpClient;
+	}
  	@Override
 	public void display(String message, boolean persistent)
 	{

@@ -3,7 +3,10 @@ import java.util.*;
 
 public class ConnectionException extends Exception
 {
-	ConnectionException(Exception e) {
+	public ConnectionException(Exception e) {
 		super(e);
+	}
+	public ConnectionException(String message) {
+		super(message);
 	}
 }

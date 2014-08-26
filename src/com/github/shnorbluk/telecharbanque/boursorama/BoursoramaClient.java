@@ -8,7 +8,7 @@ import java.io.*;
 import java.util.*;
 import org.apache.http.client.*;
 
-public class BoursoramaClient implements SessionManager
+public class BoursoramaClient extends SessionedBufferedHttpClient
 {
  
  private final UI currentTask;
@@ -19,7 +19,7 @@ public class BoursoramaClient implements SessionManager
 //	private boolean simu =true;
 	
 	public BoursoramaClient ( final BufferedHttpClient hClient, UI currentTask, Token token) {
-  super();
+  super(hClient);
      this.currentTask=currentTask;
 	 this.hClient = hClient;
 	 this.token=token;
@@ -84,15 +84,16 @@ public class BoursoramaClient implements SessionManager
   return map;
  }
 
- public void connect() throws Exception {
+	@Override
+ protected void connect() throws ConnectionException {
 	 logd("Connexion ");
    boolean online=true;
    String password=Configuration.getBoursoramaPassword();
    if (password == null) {
-   	throw new Exception("Le mot de passe n'a pas ete saisi.");
+   	throw new ConnectionException("Le mot de passe n'a pas ete saisi.");
    }
    currentTask.display("Connexion à Boursorama  en cours",true);
-   //if (simu) return;
+   		try {
 		  StringBuffer connectionPage=hClient.loadString("https://www.boursorama.com/connexion.phtml?", null, true, "");
 		  String connectionPageStr=connectionPage.toString();
 		  String imgUrl=Utils.findGroupAfterPattern(connectionPageStr, "<img id=\"login-pad_pad", "src=\"([^\"]*)");
@@ -106,9 +107,8 @@ public class BoursoramaClient implements SessionManager
 		  HashMap<String,String> codeMap=new HashMap<String,String>(12);
 		  for(int i=1; i<parts.length; i++){
               String coord=Utils.findGroupAfterPattern(parts[i], "coords=","\"([0-9]+,[0-9]+)");
-			  logd("coord=",coord);
 			  String code=Utils.findGroupAfterPattern(parts[i], "\\+= '", "(....|)'");
-			  logd("code=",code);
+			  
 			  codeMap.put(coord,code);
 		  }
 		  logd("codeMap=",codeMap);
@@ -127,9 +127,15 @@ public class BoursoramaClient implements SessionManager
 		  }; 
 		  String uri="https://www.boursorama.com/logunique.phtml";
 		  StringBuffer page = hClient.loadString(uri, params, true, "");
-	      if (page.indexOf("Identifiant ou mot de passe incorrect")>0) {
-		   throw new Exception("Identifiant ou mot de passe incorrect");
+		 if (page.indexOf("Identifiant ou mot de passe incorrect")>0) {
+			 throw new ConnectionException("Identifiant ou mot de passe incorrect");
       	 }
+		 } catch (IOException e){
+			 throw new ConnectionException(e);
+		 } catch (PatternNotFoundException e) {
+			 throw new ConnectionException (e);
+		 }
+
 		 token.setConnected(true);
 		  currentTask.display("Connecté", true);
 	  

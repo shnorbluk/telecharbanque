@@ -10,27 +10,30 @@ import org.apache.http.client.entity.*;
 import org.apache.http.client.methods.*;
 import org.apache.http.message.*;
 
-public class SessionedBufferedHttpClient<SESSION extends SessionManager> extends BufferedHttpClient
+public abstract class SessionedBufferedHttpClient<SESSION extends SessionManager> extends BufferedHttpClient
 {
- private final SESSION sessionManager;
+ //private final SESSION sessionManager;
  private static final String TAG = "HClient";
  	private final BufferedHttpClient client;
  //private static final String TEMP_DIR = "/sdcard/Temp/telecharbanque/";
 //	protected UI gui;
 //	private final Token token;
 
-	public int getSessionInformation() throws ConnectionException {
-		connectIfNeeded();
-		return sessionManager.getSessionInformation();
-	}
+//	public int getSessionInformation() throws ConnectionException {
+//		connectIfNeeded();
+//		return sessionManager.getSessionInformation();
+//	}
+	
+	protected abstract boolean isConnected();
+	protected abstract void connect() throws ConnectionException;
 	
 	@Override
 	protected boolean connectIfNeeded() throws ConnectionException {
 		client.connectIfNeeded();
-		if (sessionManager != null && (!sessionManager.isConnected()) ) {
+		if (!isConnected()) {
 			try {
-				logd("Non connecté, connexion en cours");
-				sessionManager.connect();
+				logd("Non connecté, connexion en cours via la classe ", getClass());
+				connect();
 				return true;
 			} catch (Exception e) {
 				throw new ConnectionException(e);
@@ -42,9 +45,9 @@ public class SessionedBufferedHttpClient<SESSION extends SessionManager> extends
 		
 	}
 	
-	public SessionedBufferedHttpClient( BufferedHttpClient client, SESSION sessionManager) {
-		super(null, null);
-  this.sessionManager=sessionManager;
+	public SessionedBufferedHttpClient( BufferedHttpClient client) {
+		super(client.getCurrentTask(), client.getHttpClient());
+//  this.sessionManager=sessionManager;
   this.client=client;
  }
  

@@ -6,24 +6,25 @@ import com.github.shnorbluk.telecharbanque.util.*;
 import java.text.*;
 import java.util.*;
 import org.apache.http.client.*;
+import java.io.*;
+import java.util.concurrent.*;
 
 public class DownloadMoneyCenterTask 
   extends AsynchTask<String>
 {
  protected static String TAG="DownloadMoneyCenterTask";
  private MoneycenterPersistence persistence;
- static final String today=new SimpleDateFormat("d-M-yyyy").format(new Date());
+//	private final SessionedBufferedHttpClient<BoursoramaClient> bhClient;
+ //	private final HttpClient httpClient;
 	
- 
-	public DownloadMoneyCenterTask ( HttpClient httpClient, Token token ) {
-		final BufferedHttpClient nhClient = new BufferedHttpClient(this, httpClient);
-		final BoursoramaClient bClient = new BoursoramaClient(nhClient, this, token);
-		SessionedBufferedHttpClient<BoursoramaClient> bhClient= new SessionedBufferedHttpClient<BoursoramaClient>(nhClient, bClient);
-		final MoneycenterSession mcSession = new MoneycenterSession(bhClient, this);
-		SessionedBufferedHttpClient<MoneycenterSession> mhClient = new SessionedBufferedHttpClient<MoneycenterSession>(bhClient, mcSession);
-		MoneycenterClient mcClient= new MoneycenterClient(mhClient, this);
-	 	this. persistence = new MoneycenterPersistence(mcClient, this);
-		//this.persistence = mcPersistence;
+	public DownloadMoneyCenterTask ( HttpClient httpClient, Token boursoramaToken) {
+	//	final BufferedHttpClient nhClient = new BufferedHttpClient(this, httpClient);
+	//	final BoursoramaClient bClient = new BoursoramaClient(nhClient, this, token);
+	//	bhClient= new SessionedBufferedHttpClient<BoursoramaClient>(nhClient, bClient);
+	//	this.httpClient=httpClient;
+		super();
+		final MoneycenterClient mcClient= new MoneycenterClient(httpClient, this, boursoramaToken);
+		this. persistence = new MoneycenterPersistence(mcClient);
  }
 
    /** The system calls this to perform work in a worker thread and
@@ -31,21 +32,28 @@ public class DownloadMoneyCenterTask
    */
  protected String doInBackground (String... s) {
   try {
-   boolean saveAllMcHistory=Configuration.isSaveAllMcHistory();
-   int firstPage= Configuration.getFirstPage();
-   int lastPage=Configuration.getLastPage();
-   boolean reloadListPages=Configuration.isReloadListPages();
-   boolean saveUnchecked=true;
-
-   persistence.downloadToPersistence(
-     saveAllMcHistory, firstPage, lastPage, reloadListPages, saveUnchecked) ;
-  // persistence.exportToCsv(list); 
+	  display("Téléchargement de toutes les pages jusqu'à aujourd'hui", false);
+	  downloadAllPagesToDate(new Date());
+	  final Calendar cal = Calendar.getInstance();
+	  cal.add(Calendar.MONTH, -3);
+	  downloadAllPagesToDate(cal.getTime()); 
   } catch (Exception e) {
    display(e.toString(), true);
    Log.e(TAG, "Erreur", e);
   }
   return null;
  }
-
-
+	private void downloadAllPagesToDate(Date dateFin) throws IOException, ExecutionException, ConnectionException, InterruptedException{
+		boolean saveAllMcHistory=Configuration.isSaveAllMcHistory();
+		int firstPage= Configuration.getFirstPage();
+		int lastPage=Configuration.getLastPage();
+		boolean reloadListPages=Configuration.isReloadListPages();
+		boolean saveUnchecked=true;
+	//	final MoneycenterSession mcSession = new MoneycenterSession(bhClient, this, dateFin);
+	//	SessionedBufferedHttpClient<MoneycenterSession> mhClient = new SessionedBufferedHttpClient<MoneycenterSession>(bhClient, mcSession);
+		 
+		persistence.downloadToPersistence(
+			saveAllMcHistory, firstPage, lastPage, reloadListPages, saveUnchecked, dateFin);
+	}
+                                                                                                                                                                                                                                                                                                                                                                                                                        
 }

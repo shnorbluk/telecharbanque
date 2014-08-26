@@ -21,11 +21,12 @@ public class MoneycenterPersistence
  private final UI gui;
  //private final HClient hClient;
 
-	public MoneycenterPersistence( MoneycenterClient mcClient, UI gui) {
+	public MoneycenterPersistence( MoneycenterClient mcClient) {
   //this. mcClient= new MoneycenterClient(httpClient, gui, db);
+  //MoneycenterSession mcSession;
   this.mcClient = mcClient;
   //hclient=client.getHClient();
-  this.gui=gui;
+  this.gui=mcClient.getCurrentTask();
  }
 
  //public void setSimulationMode() {
@@ -118,11 +119,14 @@ public class MoneycenterPersistence
  void downloadToPersistence ( boolean saveAllMcHistory, int firstPage,
    int lastPage,
    boolean reloadListPages,
-   boolean saveUnchecked ) throws ConnectionException, ExecutionException, InterruptedException, IOException {
+   boolean saveUnchecked, Date dateFin) throws ConnectionException, ExecutionException, InterruptedException, IOException {
+	   gui.display("Téléchargement des pages pour sauvegarde", false);
 	   logd("downloadToPersistence("+saveAllMcHistory+firstPage+","+lastPage+reloadListPages+saveUnchecked);
+	   final MoneycenterSession mcSession =new MoneycenterSession(mcClient, dateFin) ;
+//	   final MoneycenterSession mcHttpClient = new SessionedBuMoneycenterSession>(mcClient.getBoursoramaHttpClient(),mcSession);
 	if (saveAllMcHistory) {
    		firstPage=1;
-   		lastPage= mcClient.getNbOfPages();
+   		lastPage= mcSession.getSessionInformation();
   	} 
   Log.d( TAG, "Pages "+firstPage+" à "+ lastPage+" reloadListPages="+ reloadListPages);
   int nbOfPages=lastPage-firstPage+1;
@@ -131,7 +135,8 @@ public class MoneycenterPersistence
   Utils.writeToFile("",PERSISTENCE_FILE,false);
   Utils.writeToFile("",csvFile,false);
   for (int numpage= firstPage; numpage<=lastPage; numpage++ ) {
-   DownloadMcPageTask task = new DownloadMcPageTask(numpage, pageIndex++, nbOfPages, mcClient);
+	  gui.display("Page " + pageIndex + " sur " + nbOfPages + ": Page " + numpage, false);
+   DownloadMcPageTask task = new DownloadMcPageTask(numpage, mcSession);
    task.setCsvFileName(csvFile);
    task.execute("");
    if (task.get() == null) {

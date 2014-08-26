@@ -8,26 +8,24 @@ import com.github.shnorbluk.telecharbanque.util.*;
 import java.io.*;
 import java.text.*;
 import java.util.*;
+import org.apache.http.client.*;
 
 public class DownloadMcPageTask extends AsynchTask<String[]>
 {
 	private int numpage;
-	private int pageIndex;
-	private int nbOfPages;
 	private static final String TAG="DownloadMcPageTask";
 	private static String csvFileName;
-	private final MoneycenterClient mcClient;
+	private final MoneycenterSession mcSession;
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
 
 	public void setCsvFileName(String csvFile) {
 		this.csvFileName=csvFile;
 	}
-	public DownloadMcPageTask(int numpage, int pageIndex, int nbOfPages, MoneycenterClient mcClient) throws ConnectionException
+	public DownloadMcPageTask(int numpage, MoneycenterSession mcSession) throws ConnectionException
 	{
+		super();
 		this.numpage = numpage;
-		this.pageIndex = pageIndex;
-		this.mcClient = mcClient;
-		this.nbOfPages = nbOfPages;
+		this.mcSession = mcSession;
 	}
 	
 	@Override
@@ -41,8 +39,7 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 	protected String[] doInBackground(String... pages) {
 		try
 		{
-			display("Page " + pageIndex + " sur " + nbOfPages + ": Page " + numpage, false);
-			List<McOperationInDb> operationList = mcClient.parseListPage (Configuration.isReloadListPages(), this, numpage);
+			List<McOperationInDb> operationList = mcSession.parseListPage (Configuration.isReloadListPages(), this, numpage);
 			String text="";
 			logd("Nombre d'opérations à exporter:",operationList.size());
 			for ( McOperationInDb operation : operationList) {
@@ -79,6 +76,10 @@ public class DownloadMcPageTask extends AsynchTask<String[]>
 			
 			return new String[]{text,csv};
 		}
+		catch (PatternNotFoundException e) {
+			display("La chaine '"+e.getPattern()+"' n'a pas été trouvée dans la page numéro "+numpage, true);
+			return null;
+		} 
 		catch (Exception e)
 		{
 			displayError(e);

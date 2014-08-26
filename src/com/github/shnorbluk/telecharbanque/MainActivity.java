@@ -184,29 +184,19 @@ public class MainActivity extends Activity
 		logd("Debut de displayOplist "+System.currentTimeMillis());
 		setContentView(R.layout.list_operations);
 		final WebView webView = (WebView) findViewById(R.id.webView1);
-		final List<String> numbers = Arrays.asList(new String[] {
-													   "Date", "Montant", "Libellé", "Type", "Pointé", "Description", 
-													   "01/01/1111", "Libellé bidon", "Type bidon", "N", "Description bidon", 
-													   "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"});
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, numbers);
-		final McOperationInDb ope = new McOperationInDb();
-		ope.setDate(new Date());
-		ope.setAmount(99.99f);
-		ope.setLibelle("Opération bidon");
-		ope.setCategoryLabel("categ");
-		ope.setMemo("Bla bla bla");
+		
 		logd("Début de la requete "+System.currentTimeMillis());
 		long start=System.currentTimeMillis();
 		final List<McOperationInDb> opList = Model.fetchQuery(
 			ModelQuery.select()
 			.from(McOperationInDb.class)
 			.orderBy("-McOperationInDb.date")
-			.limit(150)
+			.limit(200)
 			.getQuery(),
 			McOperationInDb.class);
 		int duration = (int)(System.currentTimeMillis()-start);
-		final List<McOperationInDb> operations = opList.subList(0, 140);
-		logd("Début de la concnténation html "+System.currentTimeMillis());
+		final List<McOperationInDb> operations = opList.subList(0, 100);
+		logd("Début de la concaténation html "+System.currentTimeMillis());
 		String customHtml = 
 			"<html><head><script type='text/javascript'>" +
 			"function addRow(operation){" +
@@ -223,6 +213,7 @@ public class MainActivity extends Activity
 			"<td>Date</td>" +
 			"<td>Montant</td>" +
 			"<td width='1500'>Libell&eacute;</td>" +
+			"<td>Compte</td>" +
 			"<td>Type</td>" +
 			"<td>Description</td>" +
 			"</b></tr>";
@@ -232,6 +223,7 @@ public class MainActivity extends Activity
 				"<td nowrap>" + DateFormat.getDateInstance(DateFormat.SHORT).format(operation.getDate()) + "</td>" +
 				"<td>" + operation.getAmount() + "</td>" +
 				"<td>" + TextUtils.htmlEncode(operation.getLibelle()) + "</td>" +
+				"<td>" + TextUtils.htmlEncode(operation.getAccount()) + "</td>" +
 				"<td>" + operation.getCategoryLabel() + "</td>" +
 				"<td>" + operation.getMemo() + "</td>" +
 				"</tr>";
@@ -241,22 +233,15 @@ public class MainActivity extends Activity
 		webView.getSettings().setJavaScriptEnabled(true);
 		logd("Début d'affichage du webview "+System.currentTimeMillis());
 		webView.loadData(customHtml, "text/html", "UTF-8");
-		final String url = "javascript:addRow({date:'"
-			+DateFormat.getDateInstance(DateFormat.SHORT).format(ope.getDate())
-			+"',libelle:'"+TextUtils.htmlEncode(ope.getLibelle())
-			+"',amount:"+ope.getAmount()
-			+",categ:'"+ope.getCategoryLabel()
-			+"',memo:'"+ope.getMemo()
-			+"'});";
-		
-	//	try
-	//	{
-	//		Thread.sleep(20000);
-	//	}
-	//	catch (InterruptedException e)
-	//	{}
-		webView.loadUrl(url);
-		logd(url);
+		try
+		{
+			Thread.sleep(5000);
+		}
+		catch (InterruptedException e)
+		{
+			e.printStackTrace();
+		}
+		new DisplayOperationListTask(webView).execute();
 		logd("Fin de displayListOperationsHtml "+System.currentTimeMillis());
 	}
 	private void displayOperationListGrid()

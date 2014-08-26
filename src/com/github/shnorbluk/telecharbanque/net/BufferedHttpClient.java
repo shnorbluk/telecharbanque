@@ -4,6 +4,8 @@ import android.util.*;
 import com.github.shnorbluk.telecharbanque.*;
 import com.github.shnorbluk.telecharbanque.util.*;
 import java.io.*;
+import java.math.*;
+import java.security.*;
 import java.util.*;
 import org.apache.http.client.*;
 import org.apache.http.client.entity.*;
@@ -24,6 +26,15 @@ public class BufferedHttpClient
 		this.currentTask = currentTask;
 		this.httpClient = httpClient;
 	}
+	
+	public UI getCurrentTask() {
+		return currentTask;
+	}
+	
+	public HttpClient getHttpClient() {
+		return httpClient;
+	}
+	
 
 	protected boolean connectIfNeeded() throws ConnectionException
 	{
@@ -59,14 +70,15 @@ public class BufferedHttpClient
 
 	@Deprecated
 	public StringBuffer loadString(String url, String[] params, boolean fromNet, String patternToCheck ) throws IOException, ConnectionException {
-		String fileName= url;
-		if (params!= null) {
-			fileName+="%3F";
-			for (int i=0; i<params.length; i+=2){
-				fileName += params[i] + "=" + params[i+1] +"&";
-			}
-		}
-		fileName = fileName .replace(":","") .replace("?","%3F").replace("|","%7C").replace("*","%2A").replace("\"", "%22");
+//		String fileName= url;
+//		if (params!= null) {
+//			fileName+="%3F";
+//			for (int i=0; i<params.length; i+=2){
+//				fileName += params[i] + "=" + params[i+1] +"&";
+//			}
+//		}
+//		fileName = fileName .replace(":","") .replace("?","%3F").replace("|","%7C").replace("*","%2A").replace("\"", "%22");
+		String fileName=generateFilenameForRequest(url, params);
 		return loadString(url, params, fromNet, patternToCheck, fileName );
 	}
 	
@@ -112,12 +124,24 @@ public class BufferedHttpClient
 	private String generateFilenameForRequest(String url, String[] params) {
 		String fileName= url;
 		if (params!= null) {
-			fileName+="%3F";
+			fileName+="%3F";			
 			for (int i=0; i<params.length; i+=2){
-				fileName += params[i] + "=" + params[i+1] +"&";
+				fileName += params[i] 
+					+ "=" 
+					+ params[i+1]
+					+"&";
 			}
 		}
-		fileName = fileName .replace(":","") .replace("?","%3F").replace("|","%7C").replace("*","%2A").replace("\"", "%22");
+		fileName = fileName 
+			.replace(":","") 
+			.replace("?","%3F")
+			.replace("|","%7C")
+			.replace("*","%2A")
+			.replace("\"", "%22");
+		if (fileName.length() > 245) {
+			fileName= fileName.substring(0, 245)
+				+fileName.hashCode();
+		}
 		return fileName;
 	}
 	
@@ -134,7 +158,21 @@ public class BufferedHttpClient
 	public BufferedReader getReaderFromUrl(String url, String[] params, boolean online, String patternToCheck,String fileName ) throws IOException, ConnectionException {
 		final boolean fromNet = online && !Configuration.isSimuMode();
 		String method=params==null?"get":"post";
+		if (fileName.length() > 200) {
+			try
+			{
+				final MessageDigest md = MessageDigest.getInstance("MD5");
+				final byte[] hash = md.digest(fileName.getBytes());
+				final String hashString = new BigInteger (hash).toString(16);
+				fileName= fileName.substring(0,200) + hashString; 
+			}
+			catch (NoSuchAlgorithmException e)
+			{
+				currentTask.display(e.getMessage(), true);
+			}
+		}
 		String filePath= TEMP_DIR+"/"+method+"/"+fileName+".html";
+		
 		Log.i(TAG, "Looking for file "+ filePath);
 		File file=new File( filePath );
 		boolean fileDoesNotExist = ! file.exists();
@@ -164,6 +202,7 @@ public class BufferedHttpClient
 			if (scanner.findWithinHorizon(patternToCheck, 0) != null) {
 				return str;
 			} else {
+
 				currentTask.display ("Téléchargement de "+url+ " incomplet. Nouvelle tentative dans "+delay+" secondes.", true); 
 				try {
 					Thread.sleep(delay);
@@ -172,7 +211,7 @@ public class BufferedHttpClient
 				}
 			}
 		}
-		String error= "Échec de téléchargement de "+url;
+		String error= "Échec de téléchargement de "+url+". La chaine '"+patternToCheck+"' n'a pas été trouvée dans la page à l'URL "+url ;
 		currentTask.display(error, true);
 		throw new IOException(error);
 	}

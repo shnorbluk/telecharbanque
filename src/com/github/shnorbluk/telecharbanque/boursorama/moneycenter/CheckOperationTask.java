@@ -10,14 +10,15 @@ import java.io.*;
 public class CheckOperationTask extends AsynchTask<String>
 {
 	private final MoneycenterPersistence persistence;
-	public CheckOperationTask( DefaultHttpClient httpClient, Token token) {
+	public CheckOperationTask( DefaultHttpClient httpClient, Token boursoramaToken) {
 		final BufferedHttpClient hClient = new BufferedHttpClient(this, httpClient);
-		final BoursoramaClient bClient = new BoursoramaClient(hClient, this, token);
-		final SessionedBufferedHttpClient<BoursoramaClient> bhClient = new SessionedBufferedHttpClient<BoursoramaClient>(hClient, bClient);
-		final MoneycenterSession mcSession = new MoneycenterSession(bhClient, this);
-		final SessionedBufferedHttpClient<MoneycenterSession> mchClient = new SessionedBufferedHttpClient<MoneycenterSession>(bhClient,mcSession);
-		MoneycenterClient mcClient = new MoneycenterClient(mchClient, this);
-		this. persistence = new MoneycenterPersistence (mcClient, this);
+		final BoursoramaClient bClient = new BoursoramaClient(hClient, this, boursoramaToken);
+	//	final BoursoramaClient bhClient = new SessionedBufferedHttpClient<BoursoramaClient>(hClient, bClient);
+		final MoneycenterClient mcClient = new MoneycenterClient(httpClient, this, boursoramaToken);
+	//	final MoneycenterSession mcSession = new MoneycenterSession(mcClient, this);
+	//	final SessionedBufferedHttpClient<MoneycenterSession> mchClient = new SessionedBufferedHttpClient<MoneycenterSession>(bhClient,mcSession);
+		
+		this. persistence = new MoneycenterPersistence (mcClient);
 	}
 	private void logd(Object... o) {
 		Utils.logd("CheckOperationTask", o);
