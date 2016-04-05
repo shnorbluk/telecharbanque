@@ -1,3 +1,5 @@
+package com.github.shnorbluk.telecharbanque.util;
+
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;

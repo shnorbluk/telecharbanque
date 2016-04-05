@@ -1,41 +1,50 @@
 package com.github.shnorbluk.telecharbanque.net;
 
-import android.util.*;
-import com.github.shnorbluk.telecharbanque.*;
-import com.github.shnorbluk.telecharbanque.util.*;
-import java.io.*;
-import java.math.*;
-import java.security.*;
-import java.util.*;
-import org.apache.http.client.*;
-import org.apache.http.client.entity.*;
-import org.apache.http.client.methods.*;
-import org.apache.http.message.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
-public class BufferedHttpClient
+import org.apache.commons.logging.Log;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.message.BasicNameValuePair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.github.shnorbluk.telecharbanque.ui.MessageObserver;
+import com.github.shnorbluk.telecharbanque.util.FileUtils;
+import com.github.shnorbluk.telecharbanque.util.Utils;
+
+public class BufferedHttpClient implements MessageObserver
 {
-	private static final String TAG = "BufferedHttpClient";
+	private static final Logger LOGGER = LoggerFactory.getLogger(BufferedHttpClient.class);
 	private static final String TEMP_DIR = "/sdcard/Temp/telecharbanque/";
-	private static final boolean SIMU_MODE = Configuration.isSimuMode();
 	
-	private final UI currentTask;
+	private final boolean simuMode;
 	private final HttpClient httpClient;
+	private final List<MessageObserver> messageObservers = new ArrayList<MessageObserver>(1);
 
-	public BufferedHttpClient(UI currentTask, HttpClient httpClient )
+	public BufferedHttpClient(final boolean simuMode, HttpClient httpClient )
 	{
-		this.currentTask = currentTask;
+		this.simuMode = simuMode;
 		this.httpClient = httpClient;
-	}
-	
-	public UI getCurrentTask() {
-		return currentTask;
 	}
 	
 	public HttpClient getHttpClient() {
 		return httpClient;
 	}
 	
-
 	protected boolean connectIfNeeded() throws ConnectionException
 	{
 		return false;
@@ -43,12 +52,12 @@ public class BufferedHttpClient
 	
 	public void markAsObsolete(String url, String[] params) {
 		String file = generateFilenameForRequest(url,params);
-		logd("Deleting file ",file, "because it is obsolete");
+		LOGGER.debug("Deleting file {} because it is obsolete", file);
 		boolean success = new File(file).delete();
 		if (success) {
-			logd("Fichier ",file, "supprimé avec succès");
+			LOGGER.info("Fichier {} supprimé avec succès", file);
 		} else {
-			Log.e(TAG, "Le fichier "+file+" n'a pas pu être supprimé.");
+			LOGGER.error ("Le fichier {} n'a pas pu être supprimé.", file);
 		}
 	}
 	
@@ -56,11 +65,11 @@ public class BufferedHttpClient
 	private StringBuffer loadString(String url, String[] params, boolean fromNet, String patternToCheck, String fileName ) throws IOException, ConnectionException {
 		String method=params==null?"get":"post";
 		String filePath= TEMP_DIR+"/"+method+"/"+fileName+".html";
-		Log.i(TAG, "Looking for file "+ filePath);
+		LOGGER.info( "Looking for file {}", filePath);
 		File file=new File( filePath );
 		boolean fileDoesNotExist = ! file.exists();
 		boolean net= fromNet || fileDoesNotExist;
-		logd("fileDoesNotExist="+fileDoesNotExist+",fromNet="+fromNet);
+		LOGGER.debug("fileDoesNotExist={}, fromNet={}", fileDoesNotExist, fromNet);
 		if ( net ){
 			return loadStringFromNet(url, params, filePath, patternToCheck );
 		} else {
@@ -84,12 +93,12 @@ public class BufferedHttpClient
 	
 	@Deprecated
 	private StringBuffer loadStringFromFile(String url, String[] params, String filename, String patternToCheck) throws IOException, IllegalStateException, ConnectionException {
-		logd("Loading file ", filename );
-		StringBuffer str= Utils.readFile(filename,"iso-8859-1");
+		LOGGER.debug("Loading file {}", filename );
+		StringBuffer str= FileUtils.readFile(filename,"iso-8859-1");
 		if (str.toString().indexOf(patternToCheck) != -1) {
 			return str;
 		} else {
-			logd("La chaine "+patternToCheck+" n'a pas été trouvée dans le fichier " + filename+". Nouveau téléchargement du fichier.");
+			LOGGER.debug("La chaine "+patternToCheck+" n'a pas été trouvée dans le fichier " + filename+". Nouveau téléchargement du fichier.");
 			new File(filename).delete();
 			return loadStringFromNet(url, params, filename, patternToCheck);
 		}
@@ -103,21 +112,21 @@ public class BufferedHttpClient
 			} else {
 				httppost (url, params). save(filename) ;
 			}
-			StringBuffer str=Utils.readFile(filename,"iso-8859-1");
-			Log.d(TAG, "str="+str.substring(0,30)+" pattern='"+patternToCheck+"'");
+			StringBuffer str=FileUtils.readFile(filename,"iso-8859-1");
+			LOGGER.debug( "str="+str.substring(0,30)+" pattern='"+patternToCheck+"'");
 			if (str.indexOf(patternToCheck)>=0) {
 				return str;
 			} else {
-				currentTask.display ("Téléchargement de "+url+ " incomplet. Nouvelle tentative dans "+delay+" secondes.", true);
+				displayMessage ("Téléchargement de "+url+ " incomplet. Nouvelle tentative dans "+delay+" secondes.", true);
 				try {
 					Thread.sleep(delay);
 				} catch (InterruptedException ie) {
-					currentTask.display(ie.getMessage(), true);
+					displayMessage(ie.getMessage(), true);
 				}
 			}
 		}
 		String error= "Échec de téléchargement de "+url;
-		currentTask.display(error, true);
+		displayMessage(error, true);
 		throw new IOException(error);
 	}
 	
@@ -145,18 +154,14 @@ public class BufferedHttpClient
 		return fileName;
 	}
 	
-	private void logd(Object... o) {
-		Utils.logd( TAG,o);
-	}
-	
 	public BufferedReader getReaderFromUrl(String url, String[] params, boolean online, String patternToCheck ) throws IOException, ConnectionException {
-		final boolean isOnline = online && !SIMU_MODE;
+		final boolean isOnline = online && !simuMode;
 		String fileName=generateFilenameForRequest(url, params);
 		return getReaderFromUrl(url, params, isOnline, patternToCheck, fileName );
 	}
 	
 	public BufferedReader getReaderFromUrl(String url, String[] params, boolean online, String patternToCheck,String fileName ) throws IOException, ConnectionException {
-		final boolean fromNet = online && !Configuration.isSimuMode();
+		final boolean fromNet = online && !simuMode;
 		String method=params==null?"get":"post";
 		if (fileName.length() > 200) {
 			try
@@ -168,16 +173,16 @@ public class BufferedHttpClient
 			}
 			catch (NoSuchAlgorithmException e)
 			{
-				currentTask.display(e.getMessage(), true);
+				displayMessage(e.getMessage(), true);
 			}
 		}
 		String filePath= TEMP_DIR+"/"+method+"/"+fileName+".html";
 		
-		Log.i(TAG, "Looking for file "+ filePath);
+		LOGGER.info( "Looking for file {}", filePath);
 		File file=new File( filePath );
 		boolean fileDoesNotExist = ! file.exists();
 		boolean net= fromNet || fileDoesNotExist;
-		logd("fileDoesNotExist="+fileDoesNotExist+",fromNet="+fromNet);
+		LOGGER.debug("fileDoesNotExist={},fromNet={}",fileDoesNotExist,fromNet);
 		if ( !net ){
 			BufferedReader reader= getReaderFromFile(url, params, filePath );
 			if (new Scanner(reader).findWithinHorizon(patternToCheck,0) != null ) {
@@ -189,6 +194,16 @@ public class BufferedHttpClient
 		return getReaderFromUrlOnline(url, params, filePath, patternToCheck );
 	}
 	
+	public void regisiterObserver(MessageObserver observer) {
+		messageObservers.add(observer);
+	}
+	public void displayMessage(String msg, boolean persistent
+			){
+		for (final MessageObserver observer:messageObservers) {
+			observer.displayMessage(msg, persistent);
+		}
+	}
+	
 	protected BufferedReader getReaderFromUrlOnline(String url, String[] params, String filename, String patternToCheck) throws IOException, IllegalStateException, ConnectionException {
 		for(int delay=1; delay<10; delay*=2) {
 			if (params == null) {
@@ -196,32 +211,32 @@ public class BufferedHttpClient
 			} else {
 				httppost (url, params). save(filename) ;
 			}
-			BufferedReader str=Utils.getBufferedReaderFromFile(filename,"iso-8859-1");
-			Log.d(TAG, "pattern='"+patternToCheck+"'");
+			BufferedReader str=FileUtils.getBufferedReaderFromFile(filename,"iso-8859-1");
+			LOGGER.debug("pattern='{}'",patternToCheck);
 			Scanner scanner =new Scanner(str);
 			if (scanner.findWithinHorizon(patternToCheck, 0) != null) {
 				return str;
 			} else {
 
-				currentTask.display ("Téléchargement de "+url+ " incomplet. Nouvelle tentative dans "+delay+" secondes.", true); 
+				displayMessage ("Téléchargement de "+url+ " incomplet. Nouvelle tentative dans "+delay+" secondes.", true); 
 				try {
 					Thread.sleep(delay);
 				} catch (InterruptedException ie) {
-					currentTask.display(ie.getMessage(), true); 
+					displayMessage(ie.getMessage(), true); 
 				}
 			}
 		}
 		String error= "Échec de téléchargement de "+url+". La chaine '"+patternToCheck+"' n'a pas été trouvée dans la page à l'URL "+url ;
-		currentTask.display(error, true);
+		displayMessage(error, true);
 		throw new IOException(error);
 	}
 	
 	protected HRequest executeRequest(HttpUriRequest requestget) throws IOException, IllegalStateException, ConnectionException {
-		return HRequest.execReq(httpClient, requestget, currentTask);
+		return HRequest.execReq(httpClient, requestget, this);
 	}
 	
 	public HRequest httpget(String uri) throws IOException, IllegalStateException, ConnectionException {
-		Log.i(TAG, "get "+uri);
+		LOGGER.info("get {}",uri);
 		HttpGet requestget = new HttpGet(uri);
 		return executeRequest(requestget);
 	}
@@ -234,17 +249,12 @@ public class BufferedHttpClient
 		}
 		request.setEntity(new UrlEncodedFormEntity(nameValuePairs,"utf-8")); 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		request.getEntity().writeTo(baos);
-		Log.i(TAG, "post "+uri);
-		logd("params=",params);
-		logd("request=",request);
-		logd("nameValuePairs", nameValuePairs);
 		return executeRequest (request);
 	}
 
 	private BufferedReader getReaderFromFile(String url, String[] params, String filename) throws IOException {
-		Log.i(TAG, "Loading file "+ filename );
-		return Utils.getBufferedReaderFromFile(filename,"iso-8859-1");
+		LOGGER.info( "Loading file {}", filename );
+		return FileUtils.getBufferedReaderFromFile(filename,"iso-8859-1");
 	}
 	
 }

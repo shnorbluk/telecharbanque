@@ -6,6 +6,9 @@ import com.github.shnorbluk.telecharbanque.util.*;
 import java.io.*;
 import java.text.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class McOperationFromEdit implements MoneycenterOperation
 {
 	private String contract;
@@ -27,6 +30,7 @@ public class McOperationFromEdit implements MoneycenterOperation
 	private String subcateg;
 
 	private String categoryLabel;
+	private static Logger LOGGER = LoggerFactory.getLogger(McOperationFromEdit.class);
 
 	public void setCategoryLabel(String categoryLabel)
 	{
@@ -102,20 +106,20 @@ public class McOperationFromEdit implements MoneycenterOperation
 		setId(id);
 		String extract= Utils.getExtract(html, "id=\"form_edit_operation\">", "new_groupings\\[\\]");
 		final String libelle = Utils.findGroupAfterPattern(extract, "editOperation\\[libelle\\]", "value=\"([^\"]*)");
-		setLibelle( android.text.Html.fromHtml( libelle ).toString());
+		setLibelle( PlatformSpecific.getInstance().removeHtmlTags( libelle ));
 		final String account = Utils. findGroupAfterPattern(extract,"editOperation\\[id_account\\]", "value=\"([^\"]*)");
-		setAccount( android.text.Html.fromHtml( account ).toString());
+		setAccount(PlatformSpecific.getInstance().removeHtmlTags( account ));
 		setDate( Utils. findGroupAfterPattern(extract,"editOperation\\[date\\]", "value=\"([^\"]*)"));
 		setNumCheque( Utils. findGroupAfterPattern(extract,"editOperation\\[num_cheque\\]", "value=\"([^\"]*)"));
 		setAmount( Float.parseFloat(Utils. findGroupAfterPattern(extract,"editOperation\\[amount\\]", "value=\"([^\"]*)")));
 		final String memo = Utils. findGroupAfterPattern(extract,"editOperation\\[memo\\]", ">([^<]*)</textarea");
-		setMemo( android.text.Html.fromHtml( memo ).toString());
+		setMemo( PlatformSpecific.getInstance().removeHtmlTags( memo ));
 		String categ= getValueFromSelect ( extract, "edit_operation_category");
-		logd("categ="+categ);
+		LOGGER.debug("categ="+categ);
 		if (categ.length()>0) {
 			categ= Utils. findGroupAfterPattern( categ,"category\":\"","([^\"]*)");
 		}
-		logd("categ="+categ);
+		LOGGER.debug("categ="+categ);
 		final String subcateg= getValueFromSelect ( extract, "edit_operation_subcategory");
 		setCategory( categ+"."+subcateg);
 		contract= Utils.findGroupAfterPattern(extract, "options_operation\\[contract\\]", "value=\"([^\"]*)\"  checked");
@@ -186,14 +190,14 @@ public class McOperationFromEdit implements MoneycenterOperation
 	private static String getValueFromSelect(String extract, String id) throws PatternNotFoundException {
 		String raw=valFromSelect(extract, id) ;
 		if(raw==null) return null;
-		return android.text.Html.fromHtml( raw ).toString();
+		return PlatformSpecific.getInstance().removeHtmlTags( raw );
 	}
 	private static String valFromSelect (String extract, String id) throws PatternNotFoundException {
 		String value = findGroupBetween(extract, id, "</select>", "value=\"([^\"]+)\"  checked" );
-		logd("valfromselect checked="+value);
+		LOGGER.debug("valfromselect checked="+value);
 		if (value != null) return value;
 		value = findGroupBetween(extract, id, "</select>", "value=\"([^\"]+)\" selected=\"selected\"" );
-		logd("valfromselect selected="+value);
+		LOGGER.debug("valfromselect selected="+value);
 		if (value != null) return value;
 		return findGroupBetween(extract, id, "</select>", "value=['\"]([^'\"]*)['\"]");
 	}
@@ -213,7 +217,5 @@ public class McOperationFromEdit implements MoneycenterOperation
 		}
 		return complete.substring(start+begin.length(), finish);
 	}
-	private static void logd(Object o) {
-		Utils.logd("McOperationFromEdit",o);
-	}
+	
 }

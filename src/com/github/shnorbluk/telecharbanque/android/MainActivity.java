@@ -1,4 +1,4 @@
-package com.github.shnorbluk.telecharbanque;
+package com.github.shnorbluk.telecharbanque.android;
 
 import android.app.*;
 import android.content.*;
@@ -9,6 +9,7 @@ import android.text.*;
 import android.view.*;
 import android.webkit.*;
 import android.widget.*;
+
 import com.github.shnorbluk.telecharbanque.boursorama.*;
 import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.*;
 import com.github.shnorbluk.telecharbanque.net.*;

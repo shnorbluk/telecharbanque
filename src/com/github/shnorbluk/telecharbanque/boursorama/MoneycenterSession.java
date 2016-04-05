@@ -1,5 +1,4 @@
 package com.github.shnorbluk.telecharbanque.boursorama;
-import android.util.*;
 import com.github.shnorbluk.telecharbanque.*;
 import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.*;
 import com.github.shnorbluk.telecharbanque.net.*;
@@ -9,17 +8,22 @@ import java.text.*;
 import java.util.*;
 import java.util.regex.*;
 import org.orman.mapper.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.crypto.*;
 
 public class MoneycenterSession extends SessionedBufferedHttpClient
 {
  //private final SessionedBufferedHttpClient boursoramaHttpClient;
  private int nbOfPages = -1;
- private static final String TAG="MoneycenterSession";
+ private static final Logger LOGGER = LoggerFactory.getLogger(MoneycenterSession.class);
  private final Date dateFin;
  private boolean connected = false;
  	private final BoursoramaClient boursoramaHttpClient;
 	private final MoneycenterClient mcClient;
+	private boolean reloadListPages = false;
+	private boolean reloadOperationPages = false;
  
 	public MoneycenterSession(final MoneycenterClient mcClient, Date dateFin ) {
 		super(mcClient.getBoursoramaClient());
@@ -33,11 +37,14 @@ public class MoneycenterSession extends SessionedBufferedHttpClient
 //		return boursoramaHttpClient;
 //	}
 	
+	public void setReloadListPages(boolean reload) {
+		this.reloadListPages = reload;
+	}
 	public boolean isConnected() {
 		return connected;
 	}
-	public List<McOperationInDb> parseListPage(boolean reloadListPage, UI gui, int numpage) throws PatternNotFoundException, IOException, ConnectionException, ParseException {
-		logd("parseListPage(",reloadListPage, numpage);
+	public List<McOperationInDb> parseListPage(boolean reloadListPage, int numpage) throws PatternNotFoundException, IOException, ConnectionException, ParseException {
+		LOGGER.debug("parseListPage({},{})",reloadListPage, numpage);
 		BufferedReader html = getReaderFromUrl(
 			"https://www.boursorama.com/moneycenter/monbudget/index.phtml?page=" + numpage
 			, null, reloadListPage, "</tbody>");
@@ -46,16 +53,16 @@ public class MoneycenterSession extends SessionedBufferedHttpClient
 		String[] opes=extract.split("<tr");
         MoneycenterOperationFromList previousOpe=null;
 		for (int partnum=1; partnum<opes.length; partnum++) {
-			gui.display("Opération "+ partnum+" sur "+ (opes.length-1)+" de la page "+numpage, false);
+			displayMessage("Opération "+ partnum+" sur "+ (opes.length-1)+" de la page "+numpage, false);
 			String extr=opes[partnum];
 			if ( extr .indexOf("class=\"createRule\"")>0) {
-				logd("Proposition de catégorie");
+				LOGGER.debug("Proposition de catégorie");
 				continue;
 			}
 			MoneycenterOperationFromList opeFromList = MoneycenterParser. getOperationFromListExtract( extr, previousOpe);
             previousOpe=opeFromList;
 			String id = opeFromList.getId();
-			logd("Récupération de l'opération ", id);
+			LOGGER.debug("Récupération de l'opération ", id);
 
 			//McOperationInDb opeFromDb = db.getOperation(id);
 			final McOperationInDb opeFromDb = Model.fetchSingle(
@@ -63,7 +70,7 @@ public class MoneycenterSession extends SessionedBufferedHttpClient
 				.from(McOperationInDb.class)
 				.where( C.eq(McOperationInDb.class, "id", id))
 				.getQuery(), McOperationInDb.class);
-			logd("Operation trouvee en base:",opeFromDb);
+			LOGGER.debug("Operation trouvee en base:",opeFromDb);
 			final McOperationInDb opeForDb;
 			if (opeFromDb == null) {
 				opeForDb = new McOperationInDb();
@@ -71,7 +78,7 @@ public class MoneycenterSession extends SessionedBufferedHttpClient
 				opeForDb = opeFromDb;
 				opeForDb.setUpToDate(!opeFromList.equals(opeFromDb));
 			}
-			McOperationFromEdit opFromEdit=mcClient.getOperation(id, Configuration.isReloadOperationPages());
+			McOperationFromEdit opFromEdit=mcClient.getOperation(id, reloadOperationPages);
 			opeForDb.setSaved(opeFromDb != null);
 			opeForDb.setChecked(opeFromList.isChecked());
 			opeForDb.setParent( opeFromList.getParent());
@@ -83,7 +90,7 @@ public class MoneycenterSession extends SessionedBufferedHttpClient
 			opeForDb.setDate(opeFromList.getDate());
 			opeForDb.setMemo(opFromEdit.getMemo());
 			opeForDb.setNumCheque(opFromEdit.getNumCheque());
-			logd("Enregistrement de l'opération "+opeForDb.getId()+" dans la base de données");
+			LOGGER.debug("Enregistrement de l'opération "+opeForDb.getId()+" dans la base de données");
 			list.add(opeForDb);
 		}
 		return list;
@@ -93,11 +100,7 @@ public class MoneycenterSession extends SessionedBufferedHttpClient
   return nbOfPages; 
  }
 
-	 private static void logd(Object... msg) {
-		 Utils.logd("McSession",msg);
-	 }
-	
-	
+		
 	public void connect () throws ConnectionException {
 		final Calendar c = Calendar.getInstance();
 		final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM");
@@ -118,7 +121,7 @@ public class MoneycenterSession extends SessionedBufferedHttpClient
 		final StringBuffer html= boursoramaHttpClient.loadString(
 			url.toString(), null, true,"");
 		 connected=true;
-  Log.d( TAG , "Categories");
+		 LOGGER.debug("Categories");
   HashMap<String,String> categories = new HashMap< String,String >(); 
   String regex="\\{'type':'([^']+)','category':'([^']+)'\\}\">([^<]*)</a><b" ;
   //Matcher matcher= Pattern.compile(regex).matcher(html);

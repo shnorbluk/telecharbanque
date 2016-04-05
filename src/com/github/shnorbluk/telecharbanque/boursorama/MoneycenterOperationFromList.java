@@ -1,13 +1,20 @@
 package com.github.shnorbluk.telecharbanque.boursorama;
 
-import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.*;
-import com.github.shnorbluk.telecharbanque.util.*;
-import java.text.*;
-import java.util.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.IMcOperationFromList;
+import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.McOperationInDb;
+import com.github.shnorbluk.telecharbanque.orm.MoneycenterProperty;
 
 public class MoneycenterOperationFromList implements IMcOperationFromList
  {
 	private static final SimpleDateFormat DATE_FORMAT_FOR_LIST = new SimpleDateFormat("dd/MM/yy");
+	private static final Logger LOGGER = LoggerFactory.getLogger(MoneycenterOperationFromList.class);
 	private String parent;
 	private Date date;
 	private boolean checked;
@@ -114,29 +121,27 @@ public class MoneycenterOperationFromList implements IMcOperationFromList
 	public String getParent (){
 		return parent ;
 	}
-	private void logd(Object... o){
-		Utils.logd("MoneycenterOperationFromList", o);
-	}
 	public boolean equals (McOperationInDb opeFromDb) {
+		final boolean equal = this.getId().equals(opeFromDb.getId());
 		MoneycenterProperty[] props = MoneycenterProperty.propertiesInList();
 		for (MoneycenterProperty prop:props) {
-			logd(prop.getName());
+			LOGGER.debug(prop.getName());
 		}
 		for (MoneycenterProperty prop:props) {
 			Object val1=prop.getValueFromList(this);
 			Object val2=prop.getValue(opeFromDb);
-			logd(prop.getName(),":",val1,"==",val2);
+			LOGGER.debug("{}:{}=={}",new Object[]{prop.getName(),val1,val2});
 			if (val1 == null) {
 				if (val2==null) {
-					logd ("Les 2 valeurs sont nulles");
+					LOGGER.debug("Les 2 valeurs sont nulles");
 					continue;
 				} else {
 					return false;
 				}
 			}
 			if (!val1.equals(val2)) {
-				logd("Les valeurs sont differentes pour la propriete ",
-				prop.getName(),":",val1,"!=",val2);
+				LOGGER.debug("Les valeurs sont differentes pour la propriete {}:{}!={}",
+				new Object[]{prop.getName(),val1,val2});
 				return false;
 			}
 		}

@@ -1,7 +1,9 @@
-package com.github.shnorbluk.telecharbanque.boursorama.moneycenter;
+package com.github.shnorbluk.telecharbanque.android;
 
 import android.text.*;
 import android.webkit.*;
+
+import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.McOperationInDb;
 import com.github.shnorbluk.telecharbanque.util.*;
 import java.text.*;
 import java.util.*;

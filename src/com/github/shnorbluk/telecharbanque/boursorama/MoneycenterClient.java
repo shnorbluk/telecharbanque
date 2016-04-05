@@ -1,59 +1,68 @@
 package com.github.shnorbluk.telecharbanque.boursorama;
 
-import android.util.*;
-import com.github.shnorbluk.telecharbanque.*;
-import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.*;
-import com.github.shnorbluk.telecharbanque.net.*;
-import com.github.shnorbluk.telecharbanque.util.*;
-import java.io.*;
-import java.text.*;
-import java.util.*;
-import org.apache.http.client.*;
-import org.orman.mapper.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+import org.apache.http.client.HttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.github.shnorbluk.telecharbanque.PatternNotFoundException;
+import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.McOperationFromEdit;
+import com.github.shnorbluk.telecharbanque.net.BufferedHttpClient;
+import com.github.shnorbluk.telecharbanque.net.ConnectionException;
+import com.github.shnorbluk.telecharbanque.net.UnexpectedResponseException;
+import com.github.shnorbluk.telecharbanque.ui.MessageObserver;
+import com.github.shnorbluk.telecharbanque.util.Utils;
 
 public class MoneycenterClient
 {
 //	private final BoursoramaClient bClient;
  //private SessionedBufferedHttpClient hclient;
- private static String TAG = "MoneycenterClient";
- private final UI gui;
+ private static final Logger LOGGER = LoggerFactory.getLogger(MoneycenterClient.class);
 	private static final String URL_EDIT_OPERATION = "https://www.boursorama.com/ajax/patrimoine/moneycenter/monbudget/operation_edit.phtml";
 //	private MoneycenterSession mcHttpClient = null;
 	private final BufferedHttpClient basicHttpClient;
 	private final BoursoramaClient boursoramaSession;
-//	private final BoursoramaClient boursoramaHttpClient;
+	private final List<MessageObserver> observers = new ArrayList<MessageObserver>();
 
-	public MoneycenterClient(final HttpClient httpClient, UI gui, final Token boursoramaToken) {
-		basicHttpClient = new BufferedHttpClient(gui, httpClient);
-		boursoramaSession = new BoursoramaClient(basicHttpClient, gui, boursoramaToken);
+	public MoneycenterClient(final HttpClient httpClient, final String username, String password) {
+		basicHttpClient = new BufferedHttpClient(true, httpClient);
+		boursoramaSession = new BoursoramaClient(basicHttpClient, username,password);
 	//	boursoramaHttpClient = new SessionedBufferedHttpClient<BoursoramaClient>(basicHttpClient, boursoramaSession);
 	//	initMcHttpClient();
 	//	final SessionedBufferedHttpClient<BoursoramaClient> bhClient = new SessionedBufferedHttpClient<BoursoramaClient>(hClient, bClient);
 		
-  this.gui=gui;
 	//final MoneycenterSession session = new MoneycenterSession(httpClient, gui);
 //	 hclient= new HClient(httpClient, session, gui, bToken);
 //	 bClient = new BoursoramaClient(httpClient,gui
  }
- 	public UI getCurrentTask() {
-		return gui;
-	}
+ 
 	public BoursoramaClient getBoursoramaClient() {
 		return boursoramaSession;
 	}
 
+	public void addMessageObserver(MessageObserver observer) {
+		observers.add(observer);
+	}
 	
+	public void display(String msg, boolean persistent) {
+		for (MessageObserver observer:observers){
+			observer.displayMessage(msg, persistent);
+		}
+	}
 	
+
  void pointeOperation(String id, boolean pointed) throws IOException, ConnectionException {
   	boursoramaSession .loadString( 
     "https://www.boursorama.com/ajax/patrimoine/moneycenter/monbudget/operations_check.phtml" ,
     new String[]{ "operations["+id+"]" ,pointed?"yes":"no"  }, true,"") ;
-  gui.display("Opération "+id+" pointée.", true);
-  logd("pointeOperation ",Thread.currentThread().getStackTrace());
- }
-
- private void logd(Object... o) {
-	 Utils.logd(TAG,o);
+  display("Opération "+id+" pointée.", true);
+  LOGGER.debug("pointeOperation {}",Thread.currentThread().getStackTrace());
  }
 
  public void postOperation (McOperationFromEdit ope) throws UnexpectedResponseException, IOException, ConnectionException {
@@ -63,28 +72,28 @@ public class MoneycenterClient
 	 String file ="postOperation"+ope.getId();
    BufferedReader result = boursoramaSession .getReaderFromUrl( URL_EDIT_OPERATION , params, true,"", file) ;
    String line;
-   logd("Lecture de la page ", file);
+   LOGGER.debug("Lecture de la page {}", file);
    while ((line= result.readLine())!= null) {
 	   if (line.contains("Votre")) {
-	   	 logd(line);
+	   	 LOGGER.debug(line);
 		}
    }
    result.reset();
    Scanner scanner=new Scanner(result);
-   logd(scanner.findWithinHorizon("Votre", 0));
+   LOGGER.debug(scanner.findWithinHorizon("Votre", 0));
    scanner.reset();
    boolean found = scanner.findWithinHorizon(expected,0)!=null;
    scanner.close();
 	markOperationPageAsObsolete(ope.getId());
    if(found) {
-    gui.display("L'opération "+ope.getId()+" a été mise à jour avec succès.", true);
+    display("L'opération "+ope.getId()+" a été mise à jour avec succès.", true);
    } else {
     String message = "Erreur lors de la mise à jour de l'opération " +ope.getId()+".\n";
 	message+= "Le texte '"+expected+"' n'est pas présent dans la réponse.\n";
 	message+= "La réponse a été enregistrée dans le fichier "+file;
-    gui.display( message, true); 
-    Log.d(TAG, ope.getAsParams().toString());
-    Log.d(TAG, Utils.toString(ope.getAsParams()));
+    display( message, true); 
+    LOGGER.debug(ope.getAsParams().toString());
+    LOGGER.debug(Utils.toString(ope.getAsParams()));
     throw new UnexpectedResponseException (message);
    }
   }
@@ -112,7 +121,7 @@ public McOperationFromEdit getOperation(String id, boolean online) throws IOExce
 	  McOperationFromEdit opeFromEdit = new McOperationFromEdit(html, id);
 	  return opeFromEdit;
   } catch ( PatternNotFoundException e ) {
-   gui.display("La chaine '"+
+   display("La chaine '"+
      e.getPattern()+
 	 "' n'a pas été trouvée dans la page de l'opération "+id, true);
    throw e;

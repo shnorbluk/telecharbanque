@@ -1,7 +1,9 @@
-package com.github.shnorbluk.telecharbanque.util;
+package com.github.shnorbluk.telecharbanque.android;
 
 import android.os.*;
 import com.github.shnorbluk.telecharbanque.*;
+import com.github.shnorbluk.telecharbanque.util.Utils;
+
 import org.apache.http.client.*;
 
 public abstract class AsynchTask<Return> extends AsyncTask<String, String, Return> implements UI

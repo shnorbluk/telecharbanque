@@ -1,11 +1,11 @@
-package com.github.shnorbluk.telecharbanque.boursorama;
+package com.github.shnorbluk.telecharbanque.orm;
 
-import android.content.*;
-import android.database.*;
 import java.text.*;
 import java.util.*;
+
+import com.github.shnorbluk.telecharbanque.boursorama.MoneycenterOperation;
+import com.github.shnorbluk.telecharbanque.boursorama.MoneycenterOperationFromList;
 import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.*;
-import android.webkit.*;
 
 public abstract class MoneycenterProperty<VALUE>
  {
@@ -40,36 +40,20 @@ public abstract class MoneycenterProperty<VALUE>
 		}
  };
 	public static final MoneycenterProperty<Date> DATE= new MoneycenterProperty<Date>("date", "TEXT", "NOT NULL") {
-		@Override
-		public void put (ContentValues values, String key, Date value) {
-			values.put(key, DB_DATE_FORMAT.format(value));
-		}
+	
 		public Date getValue ( MoneycenterOperation ope) {
 		 return ((McOperationInDb)ope).getDate();
 	 }
 		public Date getValueFromList(MoneycenterOperationFromList ope) {
 			return ope.getDate();
 		}
-		public void setValue(McOperationInDb ope, Cursor cursor) {
-			try {
-				ope.setDate(DB_DATE_FORMAT.parse(cursor.getString(ordinal())));
-			} catch (ParseException e) {
-				throw new RuntimeException(e);
-			}
-			
-		}
+	
  };
 	public static final MoneycenterProperty<Float> AMOUNT= new MoneycenterProperty<Float>("amount", "REAL", "NOT NULL") {
 		public Float getValue ( MoneycenterOperation ope) {
 		 return ope.getAmount();
 	 }
-	 @Override
-	 public void put(ContentValues values, String key, Float value) {
-		 values.put(key, value);
-	 }
-		public void setValue(McOperationInDb ope, Cursor cursor){
-		 ope.setAmount(cursor.getFloat(ordinal()));
-	 }
+	
  };
  public static final McStringProperty CATEGORY= new McStringProperty("category", ""){
 	 public String getValue ( MoneycenterOperation ope) {
@@ -101,16 +85,10 @@ public abstract class MoneycenterProperty<VALUE>
 			return ((IMcOperationFromList)ope) .isChecked();
 	 }
 	 @Override
-	 public Boolean getValueFromList(McOperationInDb ope) {
+	 public Boolean getValueFromList(MoneycenterOperationFromList ope) {
 		 return ope.isChecked();
 	 }
-		public void setValue(McOperationInDb ope, Cursor cursor) {
-		ope.setChecked(cursor.getInt(ordinal())==1);
-	}
-	@Override
-	public void put(ContentValues values, String name, Boolean value) {
-		values.put(name, value);
-	}
+	
  };
 	public static final McStringProperty PARENT = new McStringProperty("parent", ""){
 		public String getValue ( MoneycenterOperation ope) {
@@ -147,9 +125,7 @@ public abstract class MoneycenterProperty<VALUE>
  public VALUE getValueInDb( McOperationInDb ope) {
 	 return getValue(ope);
  }
-	protected abstract VALUE getValue ( MoneycenterOperation ope);
- public abstract void setValue(McOperationInDb ope, Cursor cursor);
- public abstract void put(ContentValues values, String name, VALUE value);
+	public abstract VALUE getValue ( MoneycenterOperation ope);
 	public VALUE getValueFromList (MoneycenterOperationFromList ope) {
 		return getValue(ope);
 	}

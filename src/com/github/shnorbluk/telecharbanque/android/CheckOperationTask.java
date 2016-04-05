@@ -1,6 +1,7 @@
-package com.github.shnorbluk.telecharbanque.boursorama.moneycenter;
+package com.github.shnorbluk.telecharbanque.android;
 
 import com.github.shnorbluk.telecharbanque.boursorama.*;
+import com.github.shnorbluk.telecharbanque.boursorama.moneycenter.CheckOperationChange;
 import com.github.shnorbluk.telecharbanque.util.*;
 import java.util.*;
 import org.apache.http.impl.client.*;

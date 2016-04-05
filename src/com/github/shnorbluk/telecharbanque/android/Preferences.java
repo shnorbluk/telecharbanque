@@ -1,4 +1,4 @@
-package com.github.shnorbluk.telecharbanque;
+package com.github.shnorbluk.telecharbanque.android;
 
 import android.preference.*;
 import android.os.*;

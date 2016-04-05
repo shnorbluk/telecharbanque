@@ -1,11 +1,13 @@
 package com.github.shnorbluk.telecharbanque.boursorama;
-import android.util.*;
 import com.github.shnorbluk.telecharbanque.*;
 import com.github.shnorbluk.telecharbanque.util.*;
 import java.text.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class MoneycenterParser {
- private static final String TAG = "MoneycenterParser";
+ private static final Logger LOGGER = LoggerFactory.getLogger(MoneycenterParser.class);
 	
 
  public static MoneycenterOperationFromList getOperationFromListExtract(
@@ -40,18 +42,15 @@ public class MoneycenterParser {
    category= Utils. findGroupAfterPattern( extract , "operation-category\"",">\\s*([^< \\t\\n][^<]*[^\\s<])\\s*</"); 
   } 
   ope.setCategoryLabel(category);
-  logd("categoryLabel="+ope.getCategoryLabel());
+  LOGGER.debug("categoryLabel="+ope.getCategoryLabel());
   String signe= extract .indexOf("vardown")>0?"-":"+";
   String montant= signe+ Utils. findGroupAfterPattern( extract , "operation-amount\"",">([\\d, ]*) &euro;</span>"); 
  ope.setAmount(Float.valueOf(montant.replace(",",".").replace(" ","")));
-  Log.d(TAG, "montant="+montant);
+  LOGGER.debug("montant="+montant);
   if ( isFrac ) {
-   Log.d(TAG, "Opération fractionnée");
+   LOGGER.debug("Opération fractionnée");
    ope.setParent (Utils. findGroupAfterPattern( extract , "", "splitOf(\\d*)"));
   }
   return ope;
- }
- static void logd(String... msg) {
-	 Utils.logd(TAG, (Object[])msg);
  }
 }

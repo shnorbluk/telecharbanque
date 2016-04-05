@@ -1,7 +1,10 @@
-package com.github.shnorbluk.telecharbanque.boursorama;
+package com.github.shnorbluk.telecharbanque.android;
 
 import android.util.*;
 import com.github.shnorbluk.telecharbanque.*;
+import com.github.shnorbluk.telecharbanque.boursorama.BoursoramaClient;
+import com.github.shnorbluk.telecharbanque.boursorama.MoneycenterClient;
+import com.github.shnorbluk.telecharbanque.boursorama.MoneycenterPersistence;
 import com.github.shnorbluk.telecharbanque.util.*;
 import org.apache.http.client.*;
 import com.github.shnorbluk.telecharbanque.net.*;

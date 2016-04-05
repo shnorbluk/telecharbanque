@@ -1,51 +1,61 @@
 package com.github.shnorbluk.telecharbanque.net;
 
-import android.util.*;
-import com.github.shnorbluk.telecharbanque.*;
-import com.github.shnorbluk.telecharbanque.util.*;
-import java.net.*;
-import java.io.*;
-import org.apache.http.*;
-import org.apache.http.client.*;
-import org.apache.http.client.methods.*;
-import org.apache.http.conn.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.ConnectException;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.conn.HttpHostConnectException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.github.shnorbluk.telecharbanque.ui.MessageObserver;
+import com.github.shnorbluk.telecharbanque.util.Utils;
 
 public class HRequest
 {
- private InputStream is;
- private static final String TAG = "HRequest";
+ private final InputStream is;
+ private static final Logger LOGGER = LoggerFactory.getLogger(HRequest.class);
 
  private HRequest( InputStream is ) {
   this.is=is;
  }
 
- private static void logd(Object... o) {
-	 Utils.logd(TAG, o);
+ private static void displayMessage (MessageObserver[] observers, String msg, boolean p) {
+	 for (MessageObserver observer:observers){
+		 observer.displayMessage(msg, p);
+	 }
  }
- public static HRequest execReq(HttpClient client, HttpUriRequest req, UI gui) throws IOException, IllegalStateException {
+ public static HRequest execReq(HttpClient client, HttpUriRequest req, MessageObserver... observers) throws IOException, IllegalStateException {
   HttpResponse response=null;
-  Log.d(TAG," execReq("+req);
+  LOGGER.debug(" execReq("+req);
  for (int delay = 1; delay <= 10; delay*=2){
    boolean ok=false;
    try {
     response = client.execute(req); 
    } catch ( HttpHostConnectException e) {
-    e.printStackTrace();
-    gui.display("Erreur sur la requête"+req, true);
+    LOGGER.error("Echec de connexion à la requête "+req, e);
+    displayMessage(observers, "Erreur sur la requête "+req, true);
    } catch (Exception e) {
-    Log.e(TAG, " exception autre connexion", e);
-    if(gui!=null) {
-     gui.display(e.getMessage(), true);
-    }
-    e.printStackTrace();
+    LOGGER.error("Exception pour autre raison que connexion", e);
+    displayMessage(observers, e.getMessage(), true);
    }
     if (response == null) {
-     logd("response null");
-     gui.display( "Nouvelle tentative dans "+delay+
+     LOGGER.debug("response null");
+     displayMessage( observers, "Nouvelle tentative dans "+delay+
      " secondes.", false);
      continue;
     }
-    if (response.getEntity() == null) logd("entity null");
+    if (response.getEntity() == null) 
+    	LOGGER.debug("entity null");
     InputStream is= response.getEntity().getContent() ; 
     return new HRequest(is);
   }

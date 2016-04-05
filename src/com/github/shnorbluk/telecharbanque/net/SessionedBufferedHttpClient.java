@@ -1,6 +1,6 @@
 package com.github.shnorbluk.telecharbanque.net;
 
-import android.util.*;
+//import android.util.*;
 import com.github.shnorbluk.telecharbanque.*;
 import com.github.shnorbluk.telecharbanque.util.*;
 import java.io.*;
@@ -9,11 +9,13 @@ import org.apache.http.client.*;
 import org.apache.http.client.entity.*;
 import org.apache.http.client.methods.*;
 import org.apache.http.message.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class SessionedBufferedHttpClient<SESSION extends SessionManager> extends BufferedHttpClient
 {
  //private final SESSION sessionManager;
- private static final String TAG = "HClient";
+ private static final Logger LOGGER = LoggerFactory.getLogger(SessionedBufferedHttpClient.class);
  	private final BufferedHttpClient client;
  //private static final String TEMP_DIR = "/sdcard/Temp/telecharbanque/";
 //	protected UI gui;
@@ -32,23 +34,22 @@ public abstract class SessionedBufferedHttpClient<SESSION extends SessionManager
 		client.connectIfNeeded();
 		if (!isConnected()) {
 			try {
-				logd("Non connecté, connexion en cours via la classe ", getClass());
+				LOGGER.debug("Non connecté, connexion en cours via la classe ", getClass());
 				connect();
 				return true;
 			} catch (Exception e) {
 				throw new ConnectionException(e);
 			}
 		} else {
-			logd("Déjà connecté, inutile de reconnecter");
+			LOGGER.debug("Déjà connecté, inutile de reconnecter");
 			return false;
 		}
 		
 	}
 	
 	public SessionedBufferedHttpClient( BufferedHttpClient client) {
-		super(client.getCurrentTask(), client.getHttpClient());
-//  this.sessionManager=sessionManager;
-  this.client=client;
+		super(false, client.getHttpClient());
+		this.client = client;
  }
  
  	@Override
@@ -56,8 +57,4 @@ public abstract class SessionedBufferedHttpClient<SESSION extends SessionManager
 		connectIfNeeded();
 		return client.executeRequest( requestget);
 	}
-	
- private void logd(Object... o) {
-	 Utils.logd(TAG,o);
- }
 }
